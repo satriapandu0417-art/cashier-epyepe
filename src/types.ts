@@ -26,6 +26,11 @@ export interface CartItem extends MenuItem {
 
 export type OrderStatus = 'Pending' | 'Paid' | 'Completed' | 'Cancelled' | 'Preparing' | 'Picked Up';
 
+export interface OrderEditLog {
+  timestamp: string;
+  changes: string;
+}
+
 export interface Order {
   id: string;
   customerName: string;
@@ -35,4 +40,5 @@ export interface Order {
   paymentStatus: 'Paid' | 'Unpaid';
   createdAt: string;
   note?: string;
+  editHistory?: OrderEditLog[];
 }

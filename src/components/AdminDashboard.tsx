@@ -18,6 +18,7 @@ import {
   Clock, 
   CheckCircle2, 
   XCircle,
+  Calendar,
   MoreVertical,
   DollarSign,
   Package,
@@ -34,6 +35,9 @@ export function AdminDashboard() {
   const { menu, orders, addMenuItem, updateMenuItem, deleteMenuItem, updateOrderStatus, updateOrderPaymentStatus, deleteOrder, isRealtime } = useStore();
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'menu' | 'analytics'>('overview');
   const [orderFilter, setOrderFilter] = useState<OrderStatus | 'All'>('All');
+  const [historyFilter, setHistoryFilter] = useState<'Today' | 'Yesterday' | 'Custom'>('Today');
+  const [customHistoryStart, setCustomHistoryStart] = useState(new Date().toISOString().split('T')[0]);
+  const [customHistoryEnd, setCustomHistoryEnd] = useState(new Date().toISOString().split('T')[0]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | undefined>(undefined);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -56,11 +60,27 @@ export function AdminDashboard() {
   // Derive selectedOrder from the live orders array to ensure updates (like checklist toggles) reflect immediately
   const selectedOrder = orders.find(o => o.id === selectedOrderId) || null;
 
-  // Stats
-  const totalRevenue = orders
-    .filter(o => o.status !== 'Cancelled')
-    .reduce((sum, o) => sum + o.total, 0);
-  
+  // Today's Stats
+  const todayStats = useMemo(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    
+    const todayOrders = orders.filter(o => {
+      const orderDate = new Date(o.createdAt);
+      const orderDay = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate()).getTime();
+      return orderDay === today && o.status !== 'Cancelled';
+    });
+
+    const revenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
+    const itemsSold = todayOrders.reduce((sum, o) => sum + o.items.reduce((iSum, item) => iSum + item.quantity, 0), 0);
+
+    return {
+      revenue,
+      ordersCount: todayOrders.length,
+      itemsSold
+    };
+  }, [orders]);
+
   const pendingOrders = orders.filter(o => o.status === 'Pending' || o.status === 'Preparing').length;
   const completedOrders = orders.filter(o => o.status === 'Completed' || o.status === 'Picked Up').length;
 
@@ -133,10 +153,66 @@ export function AdminDashboard() {
     updateOrderPaymentStatus(orderId, nextStatus);
   };
 
-  const filteredOrders = orders.filter(order => {
-    if (orderFilter === 'All') return true;
-    return order.status === orderFilter;
-  });
+  // Grouped Orders for History
+  const groupedOrders = useMemo(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const yesterday = today - (24 * 60 * 60 * 1000);
+
+    const filtered = orders.filter(order => {
+      // Status filter
+      if (orderFilter !== 'All' && order.status !== orderFilter) return false;
+
+      // Date filter
+      const orderDate = new Date(order.createdAt);
+      const orderDay = new Date(orderDate.getFullYear(), orderDate.getMonth(), orderDate.getDate()).getTime();
+
+      if (historyFilter === 'Today') return orderDay === today;
+      if (historyFilter === 'Yesterday') return orderDay === yesterday;
+      if (historyFilter === 'Custom') {
+        const start = new Date(customHistoryStart);
+        const end = new Date(customHistoryEnd);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+        return orderDate >= start && orderDate <= end;
+      }
+      return true;
+    });
+
+    // Group by date
+    const groups: Record<string, { 
+      date: string, 
+      label: string, 
+      orders: Order[],
+      stats: { revenue: number, count: number, items: number }
+    }> = {};
+
+    filtered.forEach(order => {
+      const d = new Date(order.createdAt);
+      const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString();
+      if (!groups[key]) {
+        let label = d.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const dayTime = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+        if (dayTime === today) label = 'Today';
+        else if (dayTime === yesterday) label = 'Yesterday';
+
+        groups[key] = {
+          date: key,
+          label,
+          orders: [],
+          stats: { revenue: 0, count: 0, items: 0 }
+        };
+      }
+      groups[key].orders.push(order);
+      if (order.status !== 'Cancelled') {
+        groups[key].stats.revenue += order.total;
+        groups[key].stats.count += 1;
+        groups[key].stats.items += order.items.reduce((sum, i) => sum + i.quantity, 0);
+      }
+    });
+
+    return Object.values(groups).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [orders, orderFilter, historyFilter, customHistoryStart, customHistoryEnd]);
 
   const filterTabs: (OrderStatus | 'All')[] = ['All', 'Pending', 'Preparing', 'Completed', 'Picked Up', 'Cancelled'];
 
@@ -149,26 +225,26 @@ export function AdminDashboard() {
             <DollarSign className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">Total Revenue</p>
-            <h3 className="text-2xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</h3>
+            <p className="text-sm text-gray-500 font-medium">Today's Revenue</p>
+            <h3 className="text-2xl font-bold text-gray-900">{formatCurrency(todayStats.revenue)}</h3>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-orange-100 rounded-xl text-orange-600">
-            <Clock className="w-6 h-6" />
+            <ShoppingBag className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">Active Orders</p>
-            <h3 className="text-2xl font-bold text-gray-900">{pendingOrders}</h3>
+            <p className="text-sm text-gray-500 font-medium">Today's Orders</p>
+            <h3 className="text-2xl font-bold text-gray-900">{todayStats.ordersCount}</h3>
           </div>
         </div>
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-blue-100 rounded-xl text-blue-600">
-            <CheckCircle2 className="w-6 h-6" />
+            <Package className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm text-gray-500 font-medium">Completed Orders</p>
-            <h3 className="text-2xl font-bold text-gray-900">{completedOrders}</h3>
+            <p className="text-sm text-gray-500 font-medium">Items Sold Today</p>
+            <h3 className="text-2xl font-bold text-gray-900">{todayStats.itemsSold}</h3>
           </div>
         </div>
       </div>
@@ -345,7 +421,49 @@ export function AdminDashboard() {
             </div>
           </div>
         ) : activeTab === 'orders' ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Date Filters */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex gap-2 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm">
+                {(['Today', 'Yesterday', 'Custom'] as const).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setHistoryFilter(f)}
+                    className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                      historyFilter === f
+                        ? 'bg-orange-500 text-white shadow-lg shadow-orange-200'
+                        : 'text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+
+              {historyFilter === 'Custom' && (
+                <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-gray-400 uppercase">From</span>
+                    <input
+                      type="date"
+                      value={customHistoryStart}
+                      onChange={(e) => setCustomHistoryStart(e.target.value)}
+                      className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-500 outline-none"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-gray-400 uppercase">To</span>
+                    <input
+                      type="date"
+                      value={customHistoryEnd}
+                      onChange={(e) => setCustomHistoryEnd(e.target.value)}
+                      className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold focus:ring-2 focus:ring-orange-500 outline-none"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Order Status Filters */}
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
               {filterTabs.map(status => (
@@ -363,108 +481,145 @@ export function AdminDashboard() {
               ))}
             </div>
 
-            {/* Column Headers */}
-            <div className="hidden lg:grid grid-cols-[1fr_100px_120px_140px_100px] gap-4 px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              <div>Order / Customer</div>
-              <div className="text-right">Total</div>
-              <div className="text-center">Payment</div>
-              <div className="text-center">Status</div>
-              <div className="text-right">Actions</div>
-            </div>
-
-            {filteredOrders.map(order => (
-              <motion.div 
-                key={order.id} 
-                layoutId={`order-${order.id}`}
-                onClick={() => setSelectedOrderId(order.id)}
-                className={`bg-white p-4 lg:px-6 rounded-xl border border-gray-100 shadow-sm flex flex-col lg:grid lg:grid-cols-[1fr_100px_120px_140px_100px] lg:items-center gap-4 cursor-pointer hover:shadow-md transition-all hover:border-orange-200 ${
-                  order.status === 'Picked Up' ? 'opacity-75' : 
-                  order.status === 'Cancelled' ? 'opacity-60 grayscale bg-gray-50' : ''
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-lg shrink-0 ${
-                    order.status === 'Completed' ? 'bg-green-100 text-green-600' :
-                    order.status === 'Picked Up' ? 'bg-blue-100 text-blue-600' :
-                    order.status === 'Cancelled' ? 'bg-red-100 text-red-600' :
-                    order.status === 'Preparing' ? 'bg-orange-100 text-orange-600' :
-                    'bg-gray-100 text-gray-600'
-                  }`}>
-                    {order.status === 'Preparing' ? <ChefHat className="w-5 h-5" /> : 
-                     order.status === 'Picked Up' ? <ShoppingBag className="w-5 h-5" /> :
-                     order.status === 'Cancelled' ? <XCircle className="w-5 h-5" /> :
-                     <Package className="w-5 h-5" />}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h4 className={`font-semibold text-gray-900 truncate ${order.status === 'Cancelled' ? 'line-through text-gray-500' : ''}`}>{order.customerName}</h4>
-                      <span className="text-[10px] text-gray-400 font-mono shrink-0">#{order.id.slice(0, 8)}</span>
-                      {order.status === 'Picked Up' && <Lock className="w-3 h-3 text-gray-400 shrink-0" />}
+            {/* Grouped Orders List */}
+            <div className="space-y-10">
+              {groupedOrders.map(group => (
+                <div key={group.date} className="space-y-4">
+                  {/* Date Header & Summary */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-white rounded-xl shadow-sm">
+                        <Calendar className="w-5 h-5 text-orange-500" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-900">{group.label}</h3>
+                        <p className="text-xs text-gray-500">{group.orders.length} total orders</p>
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-500 truncate">
-                      {order.items.length} items • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+                    
+                    <div className="flex items-center gap-6">
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Revenue</p>
+                        <p className="text-sm font-black text-gray-900">{formatCurrency(group.stats.revenue)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Items</p>
+                        <p className="text-sm font-black text-gray-900">{group.stats.items}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Success</p>
+                        <p className="text-sm font-black text-green-600">{group.stats.count}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column Headers */}
+                  <div className="hidden lg:grid grid-cols-[1fr_100px_120px_140px_100px] gap-4 px-6 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    <div>Order / Customer</div>
+                    <div className="text-right">Total</div>
+                    <div className="text-center">Payment</div>
+                    <div className="text-center">Status</div>
+                    <div className="text-right">Actions</div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {group.orders.map(order => (
+                      <motion.div 
+                        key={order.id} 
+                        layoutId={`order-${order.id}`}
+                        onClick={() => setSelectedOrderId(order.id)}
+                        className={`bg-white p-4 lg:px-6 rounded-xl border border-gray-100 shadow-sm flex flex-col lg:grid lg:grid-cols-[1fr_100px_120px_140px_100px] lg:items-center gap-4 cursor-pointer hover:shadow-md transition-all hover:border-orange-200 ${
+                          order.status === 'Picked Up' ? 'opacity-75' : 
+                          order.status === 'Cancelled' ? 'opacity-60 grayscale bg-gray-50' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2 rounded-lg shrink-0 ${
+                            order.status === 'Completed' ? 'bg-green-100 text-green-600' :
+                            order.status === 'Picked Up' ? 'bg-blue-100 text-blue-600' :
+                            order.status === 'Cancelled' ? 'bg-red-100 text-red-600' :
+                            order.status === 'Preparing' ? 'bg-orange-100 text-orange-600' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            {order.status === 'Preparing' ? <ChefHat className="w-5 h-5" /> : 
+                             order.status === 'Picked Up' ? <ShoppingBag className="w-5 h-5" /> :
+                             order.status === 'Cancelled' ? <XCircle className="w-5 h-5" /> :
+                             <Package className="w-5 h-5" />}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className={`font-semibold text-gray-900 truncate ${order.status === 'Cancelled' ? 'line-through text-gray-500' : ''}`}>{order.customerName}</h4>
+                              <span className="text-[10px] text-gray-400 font-mono shrink-0">#{order.id.slice(0, 8)}</span>
+                              {order.status === 'Picked Up' && <Lock className="w-3 h-3 text-gray-400 shrink-0" />}
+                            </div>
+                            <p className="text-xs text-gray-500 truncate">
+                              {order.items.length} items • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="lg:text-right">
+                          <p className={`font-bold text-gray-900 ${order.status === 'Cancelled' ? 'line-through text-gray-400' : ''}`}>
+                            {formatCurrency(order.total)}
+                          </p>
+                        </div>
+
+                        <div className="flex lg:justify-center">
+                          <button
+                            onClick={(e) => handleTogglePayment(e, order.id, order.paymentStatus)}
+                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider transition-all hover:scale-105 active:scale-95 ${
+                              order.paymentStatus === 'Paid' 
+                                ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200' 
+                                : 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200'
+                            }`}
+                            title={`Mark as ${order.paymentStatus === 'Paid' ? 'Unpaid' : 'Paid'}`}
+                          >
+                            {order.paymentStatus}
+                          </button>
+                        </div>
+
+                        <div className="flex lg:justify-center">
+                          <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
+                            order.status === 'Completed' ? 'bg-green-50 text-green-600 border border-green-100' : 
+                            order.status === 'Picked Up' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                            order.status === 'Preparing' ? 'bg-orange-50 text-orange-600 border border-orange-100' :
+                            order.status === 'Cancelled' ? 'bg-red-50 text-red-600 border border-red-100' :
+                            'bg-gray-100 text-gray-600 border border-gray-200'
+                          }`}>
+                            {order.status}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-end gap-1">
+                          {order.status !== 'Cancelled' && order.status !== 'Picked Up' && (
+                            <button
+                              onClick={(e) => handleCancelOrder(e, order.id)}
+                              className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                              title="Cancel Order"
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => handleDeleteOrder(e, order.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Delete Order"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
-
-                <div className="lg:text-right">
-                  <p className={`font-bold text-gray-900 ${order.status === 'Cancelled' ? 'line-through text-gray-400' : ''}`}>
-                    {formatCurrency(order.total)}
-                  </p>
+              ))}
+              {groupedOrders.length === 0 && (
+                <div className="text-center py-20 text-gray-400">
+                  <Package className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                  <p>No orders found for this period</p>
                 </div>
-
-                <div className="flex lg:justify-center">
-                  <button
-                    onClick={(e) => handleTogglePayment(e, order.id, order.paymentStatus)}
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider transition-all hover:scale-105 active:scale-95 ${
-                      order.paymentStatus === 'Paid' 
-                        ? 'bg-green-100 text-green-700 border border-green-200 hover:bg-green-200' 
-                        : 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200'
-                    }`}
-                    title={`Mark as ${order.paymentStatus === 'Paid' ? 'Unpaid' : 'Paid'}`}
-                  >
-                    {order.paymentStatus}
-                  </button>
-                </div>
-
-                <div className="flex lg:justify-center">
-                  <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
-                    order.status === 'Completed' ? 'bg-green-50 text-green-600 border border-green-100' : 
-                    order.status === 'Picked Up' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
-                    order.status === 'Preparing' ? 'bg-orange-50 text-orange-600 border border-orange-100' :
-                    order.status === 'Cancelled' ? 'bg-red-50 text-red-600 border border-red-100' :
-                    'bg-gray-100 text-gray-600 border border-gray-200'
-                  }`}>
-                    {order.status}
-                  </span>
-                </div>
-
-                <div className="flex justify-end gap-1">
-                  {order.status !== 'Cancelled' && order.status !== 'Picked Up' && (
-                    <button
-                      onClick={(e) => handleCancelOrder(e, order.id)}
-                      className="p-1.5 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
-                      title="Cancel Order"
-                    >
-                      <XCircle className="w-4 h-4" />
-                    </button>
-                  )}
-                  <button
-                    onClick={(e) => handleDeleteOrder(e, order.id)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Delete Order"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-            {filteredOrders.length === 0 && (
-              <div className="text-center py-20 text-gray-400">
-                <Package className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                <p>No orders found</p>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ) : activeTab === 'menu' ? (
           <div>

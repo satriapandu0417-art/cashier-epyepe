@@ -52,6 +52,7 @@ interface StoreContextType {
   createOrder: (orderData: Omit<Order, 'id' | 'createdAt' | 'status'>) => Order | Promise<Order | null>;
   updateOrderStatus: (id: string, status: Order['status']) => void;
   updateOrderPaymentStatus: (id: string, paymentStatus: Order['paymentStatus']) => void;
+  updateOrder: (id: string, updates: Partial<Order>) => void;
   toggleOrderItemPrepared: (orderId: string, itemId: string) => void;
   isRealtime: boolean;
 }
@@ -242,6 +243,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateOrder = async (id: string, updates: Partial<Order>) => {
+    if (isRealtime && supabase) {
+      const dbUpdates: any = {};
+      if (updates.customerName) dbUpdates.customer_name = updates.customerName;
+      if (updates.items) dbUpdates.items = updates.items;
+      if (updates.total !== undefined) dbUpdates.total = updates.total;
+      if (updates.status) dbUpdates.status = updates.status;
+      if (updates.paymentStatus) dbUpdates.payment_status = updates.paymentStatus;
+      if (updates.note !== undefined) dbUpdates.note = updates.note;
+      if (updates.editHistory) dbUpdates.edit_history = updates.editHistory;
+
+      await supabase.from('orders').update(dbUpdates).eq('id', id);
+    } else {
+      setOrders(prev => prev.map(order => order.id === id ? { ...order, ...updates } : order));
+    }
+  };
+
   const toggleOrderItemPrepared = async (orderId: string, itemId: string) => {
     // We need to find the order, update the item, calculate new status, then save.
     const order = orders.find(o => o.id === orderId);
@@ -286,6 +304,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       createOrder,
       updateOrderStatus,
       updateOrderPaymentStatus,
+      updateOrder,
       toggleOrderItemPrepared,
       isRealtime
     }}>
@@ -325,6 +344,7 @@ function mapDbOrder(dbOrder: any): Order {
     status: dbOrder.status,
     paymentStatus: dbOrder.payment_status,
     createdAt: dbOrder.created_at,
-    note: dbOrder.note
+    note: dbOrder.note,
+    editHistory: dbOrder.edit_history
   };
 }
