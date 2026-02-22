@@ -17,6 +17,9 @@ export function ItemModal({ isOpen, onClose, onSave, initialData }: ItemModalPro
   const [basePrice, setBasePrice] = useState(initialData?.basePrice?.toString() || '');
   const [category, setCategory] = useState<Category>(initialData?.category || 'Coffee');
   
+  const [stock, setStock] = useState(initialData?.stock?.toString() || '');
+  const [minStock, setMinStock] = useState(initialData?.minStock?.toString() || '');
+  
   const [bundleEnabled, setBundleEnabled] = useState(initialData?.bundle?.enabled || false);
   const [buyQuantity, setBuyQuantity] = useState(initialData?.bundle?.buyQuantity?.toString() || '');
   const [bundlePrice, setBundlePrice] = useState(initialData?.bundle?.bundlePrice?.toString() || '');
@@ -27,6 +30,8 @@ export function ItemModal({ isOpen, onClose, onSave, initialData }: ItemModalPro
       setName(initialData?.name || '');
       setBasePrice(initialData?.basePrice?.toString() || '');
       setCategory(initialData?.category || 'Coffee');
+      setStock(initialData?.stock?.toString() || '');
+      setMinStock(initialData?.minStock?.toString() || '');
       setBundleEnabled(initialData?.bundle?.enabled || false);
       setBuyQuantity(initialData?.bundle?.buyQuantity?.toString() || '');
       setBundlePrice(initialData?.bundle?.bundlePrice?.toString() || '');
@@ -49,6 +54,8 @@ export function ItemModal({ isOpen, onClose, onSave, initialData }: ItemModalPro
       basePrice: parseInt(basePrice) || 0,
       category,
       bundle,
+      stock: stock ? parseInt(stock) : undefined,
+      minStock: minStock ? parseInt(minStock) : undefined,
     });
     onClose();
   };
@@ -107,6 +114,31 @@ export function ItemModal({ isOpen, onClose, onSave, initialData }: ItemModalPro
                   >
                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Current Stock</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={stock}
+                    onChange={(e) => setStock(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                    placeholder="Optional"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Min. Stock Alert</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={minStock}
+                    onChange={(e) => setMinStock(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
+                    placeholder="Optional"
+                  />
                 </div>
               </div>
 

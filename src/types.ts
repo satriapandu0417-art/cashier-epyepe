@@ -14,6 +14,8 @@ export interface MenuItem {
   category: Category;
   image?: string;
   bundle?: BundleConfig;
+  stock?: number;
+  minStock?: number;
 }
 
 export interface CartItem extends MenuItem {

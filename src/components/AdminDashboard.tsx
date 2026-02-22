@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import React from 'react';
 import { useStore } from '../hooks/useStore';
 import { formatCurrency } from '../utils';
 import { ItemModal } from './ItemModal';
 import { OrderDetailPanel } from './OrderDetailPanel';
 import { DailyAnalytics } from './DailyAnalytics';
+import { ConfirmationModal } from './ConfirmationModal';
 import { MenuItem, Order, OrderStatus } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -25,16 +26,32 @@ import {
   Lock,
   Wifi,
   WifiOff,
-  Tag
+  Tag,
+  AlertCircle
 } from 'lucide-react';
 
 export function AdminDashboard() {
   const { menu, orders, addMenuItem, updateMenuItem, deleteMenuItem, updateOrderStatus, updateOrderPaymentStatus, deleteOrder, isRealtime } = useStore();
-  const [activeTab, setActiveTab] = useState<'orders' | 'menu' | 'analytics'>('orders');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'menu' | 'analytics'>('overview');
   const [orderFilter, setOrderFilter] = useState<OrderStatus | 'All'>('All');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | undefined>(undefined);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+
+  // Confirmation Modal State
+  const [confirmConfig, setConfirmConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    variant?: 'danger' | 'warning';
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    variant: 'danger',
+  });
 
   // Derive selectedOrder from the live orders array to ensure updates (like checklist toggles) reflect immediately
   const selectedOrder = orders.find(o => o.id === selectedOrderId) || null;
@@ -46,6 +63,25 @@ export function AdminDashboard() {
   
   const pendingOrders = orders.filter(o => o.status === 'Pending' || o.status === 'Preparing').length;
   const completedOrders = orders.filter(o => o.status === 'Completed' || o.status === 'Picked Up').length;
+
+  // Low Stock Items
+  const lowStockItems = menu.filter(item => item.stock !== undefined && item.minStock !== undefined && item.stock <= item.minStock);
+
+  // Recent Activity (Latest 5 orders)
+  const recentOrders = [...orders].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
+
+  // Top Selling (Overall)
+  const topSellingItems = useMemo(() => {
+    const itemMap = new Map<string, { name: string, quantity: number }>();
+    orders.filter(o => o.status !== 'Cancelled').forEach(order => {
+      order.items.forEach(item => {
+        const existing = itemMap.get(item.id) || { name: item.name, quantity: 0 };
+        existing.quantity += item.quantity;
+        itemMap.set(item.id, existing);
+      });
+    });
+    return Array.from(itemMap.values()).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
+  }, [orders]);
 
   const handleEdit = (item: MenuItem) => {
     setEditingItem(item);
@@ -63,16 +99,32 @@ export function AdminDashboard() {
 
   const handleDeleteOrder = (e: React.MouseEvent, orderId: string) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to permanently delete this order? This action cannot be undone.')) {
-      deleteOrder(orderId);
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Order',
+      message: 'Are you sure you want to permanently delete this order? This action cannot be undone.',
+      onConfirm: () => deleteOrder(orderId),
+    });
+  };
+
+  const handleDeleteMenuItem = (itemId: string, itemName: string) => {
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Delete Menu Item',
+      message: `Are you sure you want to delete "${itemName}"? This will remove it from the menu permanently.`,
+      onConfirm: () => deleteMenuItem(itemId),
+    });
   };
 
   const handleCancelOrder = (e: React.MouseEvent, orderId: string) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to cancel this order?')) {
-      updateOrderStatus(orderId, 'Cancelled');
-    }
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Cancel Order',
+      message: 'Are you sure you want to cancel this order? This will stop all preparation and mark it as cancelled.',
+      onConfirm: () => updateOrderStatus(orderId, 'Cancelled'),
+      variant: 'warning',
+    });
   };
 
   const handleTogglePayment = (e: React.MouseEvent, orderId: string, currentStatus: Order['paymentStatus']) => {
@@ -124,6 +176,17 @@ export function AdminDashboard() {
       {/* Tabs */}
       <div className="flex gap-6 border-b border-gray-200">
         <button
+          onClick={() => setActiveTab('overview')}
+          className={`pb-4 text-sm font-medium transition-colors relative ${
+            activeTab === 'overview' ? 'text-orange-600' : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Overview
+          {activeTab === 'overview' && (
+            <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
+          )}
+        </button>
+        <button
           onClick={() => setActiveTab('orders')}
           className={`pb-4 text-sm font-medium transition-colors relative ${
             activeTab === 'orders' ? 'text-orange-600' : 'text-gray-500 hover:text-gray-700'
@@ -160,7 +223,128 @@ export function AdminDashboard() {
 
       {/* Content */}
       <div className="min-h-[400px]">
-        {activeTab === 'orders' ? (
+        {activeTab === 'overview' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column: Low Stock & Top Selling */}
+            <div className="space-y-8">
+              {/* Low Stock Alerts */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-500" />
+                    Low Stock Alerts
+                  </h3>
+                  <span className="px-2 py-0.5 bg-red-50 text-red-600 text-[10px] font-bold rounded-full">
+                    {lowStockItems.length} Items
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {lowStockItems.map(item => (
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-red-50/50 rounded-xl border border-red-100">
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">{item.name}</p>
+                        <p className="text-[10px] text-red-600 font-medium">Min: {item.minStock} units</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-black text-red-600">{item.stock}</p>
+                        <p className="text-[10px] text-gray-400 uppercase">Current</p>
+                      </div>
+                    </div>
+                  ))}
+                  {lowStockItems.length === 0 && (
+                    <div className="text-center py-6 text-gray-400">
+                      <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                      <p className="text-sm">All items well stocked</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Top Selling Products */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-orange-500" />
+                  Top Selling Products
+                </h3>
+                <div className="space-y-4">
+                  {topSellingItems.map((item, index) => (
+                    <div key={item.name} className="flex items-center gap-4">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                        index === 0 ? 'bg-orange-100 text-orange-600' : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-gray-900">{item.name}</p>
+                        <div className="w-full h-1.5 bg-gray-100 rounded-full mt-1">
+                          <div 
+                            className="h-full bg-orange-500 rounded-full" 
+                            style={{ width: `${(item.quantity / topSellingItems[0].quantity) * 100}%` }} 
+                          />
+                        </div>
+                      </div>
+                      <span className="text-sm font-bold text-gray-900">{item.quantity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Recent Activity */}
+            <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-blue-500" />
+                  Recent Activity
+                </h3>
+                <button 
+                  onClick={() => setActiveTab('orders')}
+                  className="text-sm font-bold text-orange-500 hover:text-orange-600 transition-colors"
+                >
+                  View All
+                </button>
+              </div>
+              <div className="space-y-4">
+                {recentOrders.map(order => (
+                  <div 
+                    key={order.id} 
+                    onClick={() => setSelectedOrderId(order.id)}
+                    className="flex items-center gap-4 p-4 rounded-2xl border border-gray-50 hover:border-orange-100 hover:bg-orange-50/30 transition-all cursor-pointer group"
+                  >
+                    <div className={`p-3 rounded-xl ${
+                      order.status === 'Completed' ? 'bg-green-100 text-green-600' :
+                      order.status === 'Preparing' ? 'bg-orange-100 text-orange-600' :
+                      order.status === 'Cancelled' ? 'bg-red-100 text-red-600' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {order.status === 'Preparing' ? <ChefHat className="w-5 h-5" /> : <Package className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-gray-900 truncate">{order.customerName}</h4>
+                        <span className="text-[10px] text-gray-400 font-mono">#{order.id.slice(0, 8)}</span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {order.items.length} items • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-gray-900">{formatCurrency(order.total)}</p>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                        order.status === 'Completed' ? 'text-green-600' :
+                        order.status === 'Preparing' ? 'text-orange-600' :
+                        order.status === 'Cancelled' ? 'text-red-600' :
+                        'text-gray-400'
+                      }`}>
+                        {order.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : activeTab === 'orders' ? (
           <div className="space-y-4">
             {/* Order Status Filters */}
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -299,50 +483,54 @@ export function AdminDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {menu.map(item => (
-                <div key={item.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm group hover:shadow-md transition-all overflow-hidden flex flex-col">
-                  {/* Image Area */}
-                  <div className="aspect-[16/10] w-full bg-gray-100 relative overflow-hidden">
-                    <img 
-                      src={`https://picsum.photos/seed/${item.id}/400/250`} 
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute top-2 left-2">
-                      <span className="text-[10px] font-bold text-gray-600 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm uppercase tracking-wider">
+                <div key={item.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm group hover:shadow-md transition-all overflow-hidden flex flex-col relative">
+                  <div className="p-5 flex flex-col flex-1">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                         {item.category}
                       </span>
-                    </div>
-                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="p-2 bg-white/90 backdrop-blur-sm hover:bg-orange-500 hover:text-white text-orange-600 rounded-xl shadow-sm transition-all"
-                        title="Edit Item"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteMenuItem(item.id)}
-                        className="p-2 bg-white/90 backdrop-blur-sm hover:bg-red-500 hover:text-white text-red-600 rounded-xl shadow-sm transition-all"
-                        title="Delete Item"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4 flex flex-col flex-1">
-                    <h4 className="font-bold text-gray-900 mb-1 line-clamp-1">{item.name}</h4>
-                    <p className="text-xl font-black text-orange-600 mb-3">{formatCurrency(item.basePrice)}</p>
-                    
-                    {item.bundle?.enabled && (
-                      <div className="mt-auto pt-3 border-t border-gray-50">
-                        <div className="flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1.5 rounded-lg border border-green-100">
-                          <Tag className="w-3 h-3" />
-                          <span>Bundle: {item.bundle.buyQuantity} for {formatCurrency(item.bundle.bundlePrice)}</span>
-                        </div>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="p-1.5 hover:bg-orange-50 text-orange-600 rounded-lg transition-colors"
+                          title="Edit Item"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMenuItem(item.id, item.name)}
+                          className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
+                          title="Delete Item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-                    )}
+                    </div>
+                    
+                    <h4 className="font-bold text-gray-900 mb-1 text-lg line-clamp-1">{item.name}</h4>
+                    <p className="text-2xl font-black text-orange-600 mb-4">{formatCurrency(item.basePrice)}</p>
+                    
+                    <div className="space-y-3 mt-auto">
+                      {item.stock !== undefined && (
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-500">Stock Status</span>
+                          <span className={`font-bold ${
+                            item.stock <= (item.minStock || 0) ? 'text-red-600' : 'text-gray-900'
+                          }`}>
+                            {item.stock} units
+                          </span>
+                        </div>
+                      )}
+
+                      {item.bundle?.enabled && (
+                        <div className="pt-3 border-t border-gray-50">
+                          <div className="flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50 px-2.5 py-1.5 rounded-lg border border-green-100 w-fit">
+                            <Tag className="w-3 h-3" />
+                            <span>Bundle: {item.bundle.buyQuantity} for {formatCurrency(item.bundle.bundlePrice)}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -358,6 +546,15 @@ export function AdminDashboard() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveItem}
         initialData={editingItem}
+      />
+
+      <ConfirmationModal
+        isOpen={confirmConfig.isOpen}
+        onClose={() => setConfirmConfig(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmConfig.onConfirm}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        variant={confirmConfig.variant}
       />
 
       <AnimatePresence>

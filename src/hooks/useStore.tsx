@@ -9,28 +9,36 @@ const DEFAULT_MENU: MenuItem[] = [
     name: 'Espresso',
     basePrice: 25000,
     category: 'Coffee',
-    bundle: { enabled: false, buyQuantity: 0, bundlePrice: 0, showPromoLabel: false }
+    bundle: { enabled: false, buyQuantity: 0, bundlePrice: 0, showPromoLabel: false },
+    stock: 50,
+    minStock: 10
   },
   {
     id: '2',
     name: 'Iced Latte',
     basePrice: 35000,
     category: 'Coffee',
-    bundle: { enabled: true, buyQuantity: 2, bundlePrice: 60000, showPromoLabel: true }
+    bundle: { enabled: true, buyQuantity: 2, bundlePrice: 60000, showPromoLabel: true },
+    stock: 30,
+    minStock: 5
   },
   {
     id: '3',
     name: 'Croissant',
     basePrice: 20000,
     category: 'Food',
-    bundle: { enabled: true, buyQuantity: 3, bundlePrice: 50000, showPromoLabel: true }
+    bundle: { enabled: true, buyQuantity: 3, bundlePrice: 50000, showPromoLabel: true },
+    stock: 20,
+    minStock: 5
   },
   {
     id: '4',
     name: 'Green Tea',
     basePrice: 30000,
     category: 'Tea',
-    bundle: { enabled: false, buyQuantity: 0, bundlePrice: 0, showPromoLabel: false }
+    bundle: { enabled: false, buyQuantity: 0, bundlePrice: 0, showPromoLabel: false },
+    stock: 40,
+    minStock: 10
   }
 ];
 
@@ -129,7 +137,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         name: item.name,
         base_price: item.basePrice,
         category: item.category,
-        bundle_config: item.bundle
+        bundle_config: item.bundle,
+        stock: item.stock,
+        min_stock: item.minStock
       };
       await supabase.from('menu_items').insert(dbItem);
     } else {
@@ -145,6 +155,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (updates.basePrice) dbUpdates.base_price = updates.basePrice;
       if (updates.category) dbUpdates.category = updates.category;
       if (updates.bundle) dbUpdates.bundle_config = updates.bundle;
+      if (updates.stock !== undefined) dbUpdates.stock = updates.stock;
+      if (updates.minStock !== undefined) dbUpdates.min_stock = updates.minStock;
       
       await supabase.from('menu_items').update(dbUpdates).eq('id', id);
     } else {
@@ -187,9 +199,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         note: orderData.note
       };
       const { data, error } = await supabase.from('orders').insert(dbOrder).select().single();
+      
+      // Update stock in DB
+      for (const item of orderData.items) {
+        const menuItem = menu.find(m => m.id === item.id);
+        if (menuItem && menuItem.stock !== undefined) {
+          await supabase.from('menu_items')
+            .update({ stock: menuItem.stock - item.quantity })
+            .eq('id', item.id);
+        }
+      }
+
       if (data) return mapDbOrder(data);
       return null;
     } else {
+      // Update stock locally
+      setMenu(prev => prev.map(m => {
+        const orderItem = orderData.items.find(oi => oi.id === m.id);
+        if (orderItem && m.stock !== undefined) {
+          return { ...m, stock: m.stock - orderItem.quantity };
+        }
+        return m;
+      }));
       setOrders(prev => [newOrderLocal, ...prev]);
       return newOrderLocal;
     }
@@ -279,7 +310,9 @@ function mapDbMenuItem(dbItem: any): MenuItem {
     basePrice: dbItem.base_price,
     category: dbItem.category,
     image: dbItem.image,
-    bundle: dbItem.bundle_config
+    bundle: dbItem.bundle_config,
+    stock: dbItem.stock,
+    minStock: dbItem.min_stock
   };
 }
 

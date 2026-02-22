@@ -116,50 +116,45 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
         </div>
 
         {/* Menu Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 overflow-y-auto pr-2 pb-20">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6 overflow-y-auto pr-2 pb-20">
           {filteredMenu.map(item => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer relative overflow-hidden flex flex-col h-full min-h-[280px]"
+              whileHover={{ y: -4, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)' }}
+              whileTap={{ scale: 0.97 }}
+              className="group bg-white rounded-2xl border border-gray-100 shadow-sm transition-all cursor-pointer relative overflow-hidden flex flex-col h-full min-h-[160px]"
               onClick={() => addToCart(item)}
             >
               {/* Promo Label */}
               {item.bundle?.showPromoLabel && (
                 <div className="absolute top-3 right-3 z-10">
-                  <span className="bg-orange-500 text-white text-[10px] font-black px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg shadow-orange-500/20 uppercase tracking-wider">
+                  <span className="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-sm uppercase tracking-wider">
                     <Tag className="w-3 h-3" />
                     PROMO
                   </span>
                 </div>
               )}
               
-              {/* Image Area */}
-              <div className="aspect-[16/10] w-full bg-gray-100 relative overflow-hidden shrink-0">
-                 <img 
-                    src={`https://picsum.photos/seed/${item.id}/400/250`} 
-                    alt={item.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    referrerPolicy="no-referrer"
-                 />
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-
               {/* Content Area */}
-              <div className="p-4 flex flex-col flex-1 min-h-0">
+              <div className="p-4 lg:p-5 flex flex-col flex-1">
                 <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{item.category}</span>
+                    <div className="mb-1">
+                        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">{item.category}</span>
                     </div>
-                    <h3 className="font-bold text-gray-900 mb-1 line-clamp-2 leading-tight group-hover:text-orange-600 transition-colors">{item.name}</h3>
+                    <h3 className="font-bold text-gray-900 line-clamp-2 leading-snug group-hover:text-orange-600 transition-colors text-base lg:text-lg">
+                      {item.name}
+                    </h3>
                 </div>
                 
-                <div className="mt-auto pt-3">
-                    <p className="text-xl font-black text-orange-600">{formatCurrency(item.basePrice)}</p>
+                <div className="mt-4 flex flex-col gap-2">
+                    <p className="text-xl lg:text-2xl font-black text-orange-600 leading-none">
+                      {formatCurrency(item.basePrice)}
+                    </p>
                     
                     {item.bundle?.enabled && (
-                        <div className="mt-3 text-[10px] font-bold bg-green-50 text-green-700 px-2 py-1.5 rounded-lg border border-green-100 flex items-center gap-1.5">
+                        <div className="text-[10px] font-bold bg-green-50 text-green-700 px-2 py-1.5 rounded-lg border border-green-100 flex items-center gap-1.5 w-fit">
                             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
                             <span>{item.bundle.buyQuantity} for {formatCurrency(item.bundle.bundlePrice)}</span>
                         </div>
@@ -167,10 +162,10 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
                 </div>
               </div>
 
-              {/* Add Button Indicator */}
-              <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-                <div className="w-8 h-8 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-orange-500/30">
-                  <Plus className="w-5 h-5" />
+              {/* Subtle Add Indicator */}
+              <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0">
+                <div className="w-7 h-7 bg-orange-500 rounded-lg flex items-center justify-center text-white shadow-md shadow-orange-500/20">
+                  <Plus className="w-4 h-4" />
                 </div>
               </div>
             </motion.div>
