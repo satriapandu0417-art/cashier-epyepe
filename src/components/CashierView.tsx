@@ -83,9 +83,9 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
   const categories: (Category | 'All')[] = ['All', 'Coffee', 'Tea', 'Food', 'Dessert', 'Other'];
 
   return (
-    <div className="flex h-full gap-0 bg-[#F8F9FA] rounded-[2rem] overflow-hidden shadow-sm border border-slate-200/50">
+    <div className="flex flex-col lg:flex-row h-full gap-0 bg-[#F8F9FA] rounded-[2rem] overflow-hidden shadow-sm border border-slate-200/50">
       {/* Left Side - Menu */}
-      <div className="flex-1 flex flex-col gap-6 min-w-0 p-6 overflow-hidden">
+      <div className="flex-1 flex flex-col gap-6 min-w-0 p-4 lg:p-6 overflow-hidden">
         {/* Search & Filter */}
         <div className="flex flex-col gap-4">
           <div className="relative group">
@@ -116,21 +116,21 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
         </div>
 
         {/* Menu Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 overflow-y-auto pr-2 pb-20 scrollbar-hide">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5 overflow-y-auto pr-2 pb-20 scrollbar-hide">
           {filteredMenu.map(item => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ y: -5 }}
+              whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="group bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 cursor-pointer relative overflow-hidden flex flex-col h-full min-h-[180px]"
+              className="group bg-white rounded-3xl border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] hover:border-purple-200 hover:bg-purple-50/40 transition-all duration-300 ease-out cursor-pointer relative overflow-hidden flex flex-col h-full min-h-[160px]"
               onClick={() => addToCart(item)}
             >
               {/* Promo Label */}
               {item.bundle?.showPromoLabel && (
-                <div className="absolute top-4 right-4 z-10">
-                  <span className="bg-purple-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg shadow-purple-200 uppercase tracking-wider">
+                <div className="absolute top-5 right-5 z-10">
+                  <span className="bg-purple-900 text-white text-[10px] font-medium px-2.5 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider">
                     <Tag className="w-3 h-3" />
                     Promo
                   </span>
@@ -138,24 +138,24 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
               )}
               
               {/* Content Area */}
-              <div className="p-6 flex flex-col flex-1 justify-between">
+              <div className="p-5 flex flex-col flex-1 justify-between">
                 <div>
-                  <div className="mb-2">
-                    <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-[0.15em]">{item.category}</span>
+                  <div className="mb-1.5">
+                    <span className="text-[11px] font-medium text-gray-400 uppercase tracking-[0.2em]">{item.category}</span>
                   </div>
-                  <h3 className="font-bold text-slate-800 line-clamp-2 leading-snug group-hover:text-purple-600 transition-colors text-lg mb-4">
+                  <h3 className="font-medium text-gray-900 line-clamp-2 leading-snug text-lg mb-3">
                     {item.name}
                   </h3>
                 </div>
                 
-                <div className="flex flex-col gap-3">
-                  <p className="text-2xl font-black text-slate-900 leading-none tracking-tight">
+                <div className="flex flex-col gap-2.5">
+                  <p className="text-2xl font-semibold text-[#1a1525] leading-none tracking-tight">
                     {formatCurrency(item.basePrice)}
                   </p>
                   
                   {item.bundle?.enabled && (
-                    <div className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl border border-emerald-100 flex items-center gap-2 w-fit">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <div className="text-[10px] font-medium bg-gray-50 text-gray-500 px-2.5 py-1 rounded-lg border border-gray-100 flex items-center gap-1.5 w-fit">
+                      <div className="w-1.5 h-1.5 rounded-full bg-purple-900/40" />
                       <span className="truncate">{item.bundle.buyQuantity} for {formatCurrency(item.bundle.bundlePrice)}</span>
                     </div>
                   )}
@@ -163,9 +163,9 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
               </div>
 
               {/* Add Indicator */}
-              <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 duration-300">
-                <div className="w-9 h-9 bg-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-200">
-                  <Plus className="w-5 h-5" />
+              <div className="absolute bottom-5 right-5 opacity-0 group-hover:opacity-100 transition-all translate-y-1 group-hover:translate-y-0 duration-300 ease-out">
+                <div className="w-8 h-8 bg-purple-900 rounded-full flex items-center justify-center text-white shadow-sm">
+                  <Plus className="w-4 h-4" />
                 </div>
               </div>
             </motion.div>
@@ -174,9 +174,9 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
       </div>
 
       {/* Right Side - Cart */}
-      <div className="w-[420px] bg-[#FDFDFD] border-l border-slate-200/50 flex flex-col overflow-hidden shadow-2xl">
+      <div className="w-full lg:w-[420px] h-[50vh] lg:h-full bg-[#FDFDFD] border-t lg:border-t-0 lg:border-l border-slate-200/50 flex flex-col overflow-hidden shadow-2xl shrink-0">
         {/* Top Section: Header */}
-        <div className="p-8 space-y-6 bg-white border-b border-slate-100">
+        <div className="p-4 lg:p-8 space-y-4 lg:space-y-6 bg-white border-b border-slate-100">
           <div className="relative group">
             <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
               <User className="w-5 h-5 text-slate-500 group-focus-within:text-purple-500 transition-colors" />
@@ -186,14 +186,14 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
               placeholder="Nama Pelanggan"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
+              className="w-full pl-12 pr-4 py-3 lg:py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
             />
           </div>
 
           <div className="flex bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/40">
             <button
               onClick={() => setPaymentStatus('Unpaid')}
-              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${
+              className={`flex-1 py-2 lg:py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${
                 paymentStatus === 'Unpaid' 
                   ? 'bg-white text-purple-600 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/20' 
                   : 'text-slate-600 hover:text-slate-800'
@@ -203,7 +203,7 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
             </button>
             <button
               onClick={() => setPaymentStatus('Paid')}
-              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${
+              className={`flex-1 py-2 lg:py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${
                 paymentStatus === 'Paid' 
                   ? 'bg-white text-purple-600 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/20' 
                   : 'text-slate-600 hover:text-slate-800'
@@ -215,7 +215,7 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
         </div>
 
         {/* Middle Section: Cart Area */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide">
+        <div className="flex-1 overflow-y-auto p-4 lg:p-8 space-y-4 lg:space-y-6 scrollbar-hide">
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
               <div className="w-24 h-24 bg-purple-50 rounded-[2.5rem] flex items-center justify-center shadow-inner">
@@ -234,9 +234,10 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
                   <motion.div
                     key={item.id}
                     layout
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                     className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 group"
                   >
                     <div className="flex justify-between items-start mb-6">
@@ -280,26 +281,26 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
         </div>
 
         {/* Bottom Section: Sticky Payment Area */}
-        <div className="p-8 bg-white border-t border-slate-100 space-y-8">
+        <div className="p-4 lg:p-8 bg-white border-t border-slate-100 space-y-4 lg:space-y-8">
           {/* Total Card */}
-          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-8 rounded-[2.5rem] border border-purple-100/50 shadow-lg shadow-purple-100/20">
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 lg:p-8 rounded-[2rem] lg:rounded-[2.5rem] border border-purple-100/50 shadow-lg shadow-purple-100/20">
             <div className="flex justify-between items-end">
               <div className="space-y-1">
                 <p className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em]">Total Pembayaran</p>
-                <h2 className="text-4xl font-black text-purple-900 tracking-tighter">{formatCurrency(cartTotal)}</h2>
+                <h2 className="text-3xl lg:text-4xl font-black text-purple-900 tracking-tighter">{formatCurrency(cartTotal)}</h2>
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em]">Items</p>
-                <p className="text-xl font-black text-purple-900">{cart.reduce((s, i) => s + i.quantity, 0)}</p>
+                <p className="text-lg lg:text-xl font-black text-purple-900">{cart.reduce((s, i) => s + i.quantity, 0)}</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 lg:gap-4">
             <button
               onClick={() => setCart([])}
               disabled={isConfirming || showSuccess || cart.length === 0}
-              className="px-6 py-5 text-slate-600 font-black text-xs uppercase tracking-widest bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all duration-300 disabled:opacity-50"
+              className="px-4 lg:px-6 py-4 lg:py-5 text-slate-600 font-black text-xs uppercase tracking-widest bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all duration-300 disabled:opacity-50"
             >
               CLEAR
             </button>
@@ -308,7 +309,7 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
               disabled={cart.length === 0 || isConfirming || showSuccess}
               whileTap={{ scale: 0.98 }}
               animate={showSuccess ? { backgroundColor: '#10b981' } : {}}
-              className={`px-6 py-5 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden ${
+              className={`px-4 lg:px-6 py-4 lg:py-5 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center justify-center gap-2 lg:gap-3 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden ${
                 !showSuccess ? 'bg-gradient-to-r from-purple-600 to-indigo-600 shadow-xl shadow-purple-200 hover:shadow-purple-300 hover:-translate-y-0.5' : ''
               }`}
             >
