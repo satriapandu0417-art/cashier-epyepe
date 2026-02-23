@@ -32,9 +32,8 @@ import {
   Store
 } from 'lucide-react';
 
-export function AdminDashboard() {
+export function AdminDashboard({ activeTab }: { activeTab: 'dashboard' | 'orders' | 'menu' | 'analytics' }) {
   const { menu, orders, addMenuItem, updateMenuItem, deleteMenuItem, updateOrderStatus, updateOrderPaymentStatus, deleteOrder, isRealtime } = useStore();
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'menu' | 'analytics'>('overview');
   const [orderFilter, setOrderFilter] = useState<OrderStatus | 'All'>('All');
   const [historyFilter, setHistoryFilter] = useState<'Today' | 'Yesterday' | 'Custom'>('Today');
   const [customHistoryStart, setCustomHistoryStart] = useState(new Date().toISOString().split('T')[0]);
@@ -225,10 +224,11 @@ export function AdminDashboard() {
   }, [orders, orderFilter]);
 
   return (
-    <div className="p-10 max-w-[1600px] mx-auto space-y-12">
+    <div className="max-w-[1600px] mx-auto space-y-12">
       {/* Hero Summary Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2 glass-panel p-12 rounded-[3.5rem] relative overflow-hidden group purple-glow">
+      {activeTab === 'dashboard' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-2 glass-panel p-12 rounded-[3.5rem] relative overflow-hidden group purple-glow">
           {/* Decorative Glows */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 blur-[100px] rounded-full -mr-20 -mt-20 group-hover:bg-purple-500/20 transition-colors duration-700" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full -ml-20 -mb-20" />
@@ -326,45 +326,32 @@ export function AdminDashboard() {
           </button>
         </div>
       </div>
+      )}
 
       {/* Filter Controls & View Toggle */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-        <div className="flex bg-white/40 backdrop-blur-md p-1.5 rounded-[2rem] border border-white/60 shadow-inner w-fit">
-          {(['overview', 'orders', 'menu', 'analytics'] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-8 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
-                activeTab === tab
-                  ? 'bg-white text-purple-600 shadow-xl shadow-purple-100 ring-1 ring-white/50 purple-glow'
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+      {activeTab === 'orders' && (
+        <div className="flex flex-col lg:flex-row lg:items-center justify-end gap-8">
+          <div className="flex bg-white/40 backdrop-blur-md p-1.5 rounded-[2rem] border border-white/60 shadow-inner w-fit">
+            {['Today', 'Yesterday', 'Custom'].map((f) => (
+              <button
+                key={f}
+                onClick={() => f === 'Today' ? setHistoryFilter('Today') : f === 'Yesterday' ? setHistoryFilter('Yesterday') : setHistoryFilter('Custom')}
+                className={`px-8 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                  historyFilter === f
+                    ? 'bg-white text-purple-600 shadow-xl shadow-purple-100 ring-1 ring-white/50 purple-glow'
+                    : 'text-slate-600 hover:text-slate-800'
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
         </div>
-
-        <div className="flex bg-white/40 backdrop-blur-md p-1.5 rounded-[2rem] border border-white/60 shadow-inner w-fit">
-          {['Today', 'Yesterday', 'Custom'].map((f) => (
-            <button
-              key={f}
-              onClick={() => f === 'Today' ? setHistoryFilter('Today') : f === 'Yesterday' ? setHistoryFilter('Yesterday') : setHistoryFilter('Custom')}
-              className={`px-8 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
-                historyFilter === f
-                  ? 'bg-white text-purple-600 shadow-xl shadow-purple-100 ring-1 ring-white/50 purple-glow'
-                  : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Main Content Area */}
       <div className="min-h-[600px]">
-        {activeTab === 'overview' ? (
+        {activeTab === 'dashboard' ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             {/* Left Column: Order List */}
             <div className="lg:col-span-2 space-y-8">
@@ -590,7 +577,7 @@ export function AdminDashboard() {
                       <span className="text-[9px] font-black text-purple-600 bg-purple-50 px-3 py-1 rounded-lg uppercase tracking-[0.2em] border border-purple-100">
                         {item.category}
                       </span>
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
+                      <div className="flex gap-2 transition-all duration-300">
                         <button
                           onClick={() => handleEdit(item)}
                           className="w-9 h-9 flex items-center justify-center bg-white/60 text-purple-600 rounded-xl hover:bg-purple-600 hover:text-white transition-all duration-300 border border-white/60 shadow-sm"

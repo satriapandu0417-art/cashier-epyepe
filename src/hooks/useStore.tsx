@@ -145,8 +145,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           stock: item.stock,
           min_stock: item.minStock
         };
-        const { error } = await supabase.from('menu_items').insert(dbItem);
+        const { data, error } = await supabase.from('menu_items').insert(dbItem).select().single();
         if (error) throw error;
+        if (data) {
+          const mapped = mapDbMenuItem(data);
+          setMenu(prev => {
+            if (prev.some(i => i.id === mapped.id)) return prev;
+            return [...prev, mapped];
+          });
+        }
       } else {
         const newItem = { ...item, id: generateId() };
         setMenu(prev => [...prev, newItem]);
@@ -171,8 +178,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (updates.stock !== undefined) dbUpdates.stock = updates.stock;
         if (updates.minStock !== undefined) dbUpdates.min_stock = updates.minStock;
         
-        const { error } = await supabase.from('menu_items').update(dbUpdates).eq('id', id);
+        const { data, error } = await supabase.from('menu_items').update(dbUpdates).eq('id', id).select().single();
         if (error) throw error;
+        if (data) {
+          setMenu(prev => prev.map(item => item.id === id ? mapDbMenuItem(data) : item));
+        }
       } else {
         setMenu(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
       }
@@ -190,6 +200,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (isRealtime && supabase) {
         const { error } = await supabase.from('menu_items').delete().eq('id', id);
         if (error) throw error;
+        setMenu(prev => prev.filter(item => item.id !== id));
       } else {
         setMenu(prev => prev.filter(item => item.id !== id));
       }
@@ -269,9 +280,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           }
         }
 
+        const mappedOrder = mapDbOrder(data);
+        setOrders(prev => {
+          if (prev.some(o => o.id === mappedOrder.id)) return prev;
+          return [mappedOrder, ...prev];
+        });
+        
+        // Update local menu stock
+        setMenu(prev => prev.map(m => {
+          const orderItem = orderData.items.find(oi => oi.id === m.id);
+          if (orderItem && m.stock !== undefined) {
+            return { ...m, stock: m.stock - orderItem.quantity };
+          }
+          return m;
+        }));
+
         toast.success('Order created successfully');
         playNotificationSound('success');
-        return mapDbOrder(data);
+        return mappedOrder;
       }
       return null;
     } else {
@@ -412,6 +438,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
                 .eq('id', itemId);
             }
           }
+          
+          // Update local menu stock
+          setMenu(prev => prev.map(m => {
+            const diff = diffs[m.id];
+            if (diff && m.stock !== undefined) {
+              return { ...m, stock: m.stock + diff };
+            }
+            return m;
+          }));
         } catch (stockError) {
           console.error('Error updating stock:', stockError);
         }

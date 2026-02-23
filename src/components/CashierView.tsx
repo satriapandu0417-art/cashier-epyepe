@@ -83,7 +83,7 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
   const categories: (Category | 'All')[] = ['All', 'Coffee', 'Tea', 'Food', 'Dessert', 'Other'];
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] gap-0 bg-[#F8F9FA]">
+    <div className="flex h-full gap-0 bg-[#F8F9FA] rounded-[2rem] overflow-hidden shadow-sm border border-slate-200/50">
       {/* Left Side - Menu */}
       <div className="flex-1 flex flex-col gap-6 min-w-0 p-6 overflow-hidden">
         {/* Search & Filter */}
@@ -138,27 +138,27 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
               )}
               
               {/* Content Area */}
-              <div className="p-6 flex flex-col flex-1">
-                <div className="flex-1">
-                    <div className="mb-1.5">
-                        <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-[0.15em]">{item.category}</span>
-                    </div>
-                    <h3 className="font-bold text-slate-800 line-clamp-2 leading-tight group-hover:text-purple-600 transition-colors text-lg">
-                      {item.name}
-                    </h3>
+              <div className="p-6 flex flex-col flex-1 justify-between">
+                <div>
+                  <div className="mb-2">
+                    <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-[0.15em]">{item.category}</span>
+                  </div>
+                  <h3 className="font-bold text-slate-800 line-clamp-2 leading-snug group-hover:text-purple-600 transition-colors text-lg mb-4">
+                    {item.name}
+                  </h3>
                 </div>
                 
-                <div className="mt-5 flex flex-col gap-2.5">
-                    <p className="text-2xl font-black text-slate-900 leading-none tracking-tight">
-                      {formatCurrency(item.basePrice)}
-                    </p>
-                    
-                    {item.bundle?.enabled && (
-                        <div className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl border border-emerald-100 flex items-center gap-2 w-fit">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <span>{item.bundle.buyQuantity} for {formatCurrency(item.bundle.bundlePrice)}</span>
-                        </div>
-                    )}
+                <div className="flex flex-col gap-3">
+                  <p className="text-2xl font-black text-slate-900 leading-none tracking-tight">
+                    {formatCurrency(item.basePrice)}
+                  </p>
+                  
+                  {item.bundle?.enabled && (
+                    <div className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-xl border border-emerald-100 flex items-center gap-2 w-fit">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                      <span className="truncate">{item.bundle.buyQuantity} for {formatCurrency(item.bundle.bundlePrice)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
