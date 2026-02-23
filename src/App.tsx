@@ -15,40 +15,46 @@ export default function App() {
   const { menu, createOrder, isRealtime } = useStore();
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] font-sans text-slate-900">
+    <div className="min-h-screen bg-[#F0F2F5] font-sans text-slate-900 selection:bg-purple-100 selection:text-purple-900">
+      {/* Background Gradients */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-200/30 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-200/30 blur-[120px] rounded-full" />
+      </div>
+
       {/* Top Navigation Bar */}
-      <nav className="h-16 bg-white/80 backdrop-blur-md border-b border-slate-200/60 px-6 flex items-center justify-between sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-extrabold text-xl shadow-lg shadow-indigo-200 rotate-3">
+      <nav className="h-20 glass-panel px-8 flex items-center justify-between sticky top-0 z-50 border-b-0 shadow-none">
+        <div className="flex items-center gap-4">
+          <div className="w-11 h-11 purple-gradient rounded-2xl flex items-center justify-center text-white font-black text-2xl purple-glow rotate-3 transition-transform hover:rotate-0 cursor-pointer">
             B
           </div>
-          <div>
-            <h1 className="text-lg font-extrabold tracking-tight text-slate-900 leading-none">
+          <div className="hidden sm:block">
+            <h1 className="text-xl font-black tracking-tight text-slate-900 leading-none">
               Bupar POS
             </h1>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-              Smart Terminal
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">
+              Premium SaaS Terminal
             </p>
           </div>
           
           {/* Connection Status Badge */}
-          <div className={`ml-6 flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase transition-all ${
+          <div className={`ml-8 flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-all border ${
             isRealtime 
-              ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
-              : 'bg-slate-100 text-slate-500 border border-slate-200'
+              ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 neon-green-glow' 
+              : 'bg-slate-100 text-slate-500 border-slate-200'
           }`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${isRealtime ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+            <div className={`w-2 h-2 rounded-full ${isRealtime ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
             {isRealtime ? 'Cloud Sync Active' : 'Offline Mode'}
           </div>
         </div>
 
-        <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200/40">
+        <div className="flex bg-white/40 backdrop-blur-md p-1.5 rounded-[1.5rem] border border-white/60 shadow-inner">
           <button
             onClick={() => setView('cashier')}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+            className={`flex items-center gap-2.5 px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
               view === 'cashier'
-                ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200/50'
-                : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+                ? 'bg-white text-purple-600 shadow-lg shadow-purple-100 ring-1 ring-white/50'
+                : 'text-slate-400 hover:text-slate-600'
             }`}
           >
             <Store className="w-4 h-4" />
@@ -56,10 +62,10 @@ export default function App() {
           </button>
           <button
             onClick={() => setView('admin')}
-            className={`flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+            className={`flex items-center gap-2.5 px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
               view === 'admin'
-                ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200/50'
-                : 'text-slate-500 hover:text-slate-700 hover:bg-white/50'
+                ? 'bg-white text-purple-600 shadow-lg shadow-purple-100 ring-1 ring-white/50'
+                : 'text-slate-400 hover:text-slate-600'
             }`}
           >
             <LayoutDashboard className="w-4 h-4" />

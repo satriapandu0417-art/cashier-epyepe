@@ -89,13 +89,13 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
         {/* Search & Filter */}
         <div className="flex flex-col gap-4">
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-purple-500 transition-colors" />
             <input
               type="text"
               placeholder="Search menu items..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none shadow-sm transition-all text-slate-700 font-medium"
+              className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 outline-none shadow-sm transition-all text-slate-700 font-medium"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -105,7 +105,7 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-5 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-200 ${
                   selectedCategory === cat
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-200'
                     : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 hover:text-slate-700'
                 }`}
               >
@@ -130,7 +130,7 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
               {/* Promo Label */}
               {item.bundle?.showPromoLabel && (
                 <div className="absolute top-4 right-4 z-10">
-                  <span className="bg-indigo-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg shadow-indigo-200 uppercase tracking-wider">
+                  <span className="bg-purple-600 text-white text-[10px] font-black px-2.5 py-1 rounded-lg flex items-center gap-1 shadow-lg shadow-purple-200 uppercase tracking-wider">
                     <Tag className="w-3 h-3" />
                     Promo
                   </span>
@@ -141,9 +141,9 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
               <div className="p-6 flex flex-col flex-1">
                 <div className="flex-1">
                     <div className="mb-1.5">
-                        <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.15em]">{item.category}</span>
+                        <span className="text-[10px] font-extrabold text-slate-600 uppercase tracking-[0.15em]">{item.category}</span>
                     </div>
-                    <h3 className="font-bold text-slate-800 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors text-lg">
+                    <h3 className="font-bold text-slate-800 line-clamp-2 leading-tight group-hover:text-purple-600 transition-colors text-lg">
                       {item.name}
                     </h3>
                 </div>
@@ -164,7 +164,7 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
 
               {/* Add Indicator */}
               <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 duration-300">
-                <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                <div className="w-9 h-9 bg-purple-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-200">
                   <Plus className="w-5 h-5" />
                 </div>
               </div>
@@ -174,108 +174,103 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
       </div>
 
       {/* Right Side - Cart */}
-      <div className="w-[400px] bg-white border-l border-slate-200/60 flex flex-col overflow-hidden shadow-2xl shadow-slate-200/40">
-        <div className="p-6 border-b border-slate-100 bg-slate-50/30">
-          <div className="flex items-center gap-3 mb-5 bg-white p-3 rounded-2xl border border-slate-200/60 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-            <User className="w-5 h-5 text-slate-400" />
+      <div className="w-[420px] bg-[#FDFDFD] border-l border-slate-200/50 flex flex-col overflow-hidden shadow-2xl">
+        {/* Top Section: Header */}
+        <div className="p-8 space-y-6 bg-white border-b border-slate-100">
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+              <User className="w-5 h-5 text-slate-500 group-focus-within:text-purple-500 transition-colors" />
+            </div>
             <input
               type="text"
-              placeholder="Customer Name"
+              placeholder="Nama Pelanggan"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="flex-1 bg-transparent border-none outline-none text-slate-900 font-bold placeholder-slate-300 focus:ring-0 text-sm"
+              className="w-full pl-12 pr-4 py-4 bg-slate-50 border-none rounded-2xl text-sm font-bold text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
             />
           </div>
-          <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200/40">
+
+          <div className="flex bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/40">
             <button
               onClick={() => setPaymentStatus('Unpaid')}
-              className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition-all duration-200 uppercase tracking-wider ${
-                paymentStatus === 'Unpaid' ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200/50' : 'text-slate-400 hover:text-slate-600'
+              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${
+                paymentStatus === 'Unpaid' 
+                  ? 'bg-white text-purple-600 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/20' 
+                  : 'text-slate-600 hover:text-slate-800'
               }`}
             >
-              Unpaid
+              UNPAID
             </button>
             <button
               onClick={() => setPaymentStatus('Paid')}
-              className={`flex-1 py-2 text-xs font-extrabold rounded-xl transition-all duration-200 uppercase tracking-wider ${
-                paymentStatus === 'Paid' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'
+              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${
+                paymentStatus === 'Paid' 
+                  ? 'bg-white text-purple-600 shadow-xl shadow-slate-200/50 ring-1 ring-slate-200/20' 
+                  : 'text-slate-600 hover:text-slate-800'
               }`}
             >
-              Paid
+              PAID
             </button>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-5 scrollbar-hide">
+        {/* Middle Section: Cart Area */}
+        <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide">
           {cart.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4">
-              <div className="w-20 h-20 bg-slate-50 rounded-[2.5rem] flex items-center justify-center">
-                <ShoppingCart className="w-10 h-10 opacity-20" />
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
+              <div className="w-24 h-24 bg-purple-50 rounded-[2.5rem] flex items-center justify-center shadow-inner">
+                <ShoppingCart className="w-10 h-10 text-purple-200" />
               </div>
-              <p className="font-bold text-sm uppercase tracking-widest opacity-40">Cart is empty</p>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-slate-900 tracking-tight">Keranjang Kosong</h3>
+                <p className="text-sm font-bold text-slate-600 uppercase tracking-widest">Pilih menu untuk mulai transaksi</p>
+              </div>
             </div>
           ) : (
             <AnimatePresence>
               {cart.map(item => {
                 const itemTotal = calculateItemTotal(item, item.quantity);
-                const isBundleActive = item.bundle?.enabled && item.quantity >= (item.bundle.buyQuantity || 999);
-                const nextBundleQty = item.bundle?.enabled ? item.bundle.buyQuantity - (item.quantity % item.bundle.buyQuantity) : 0;
-                const showSuggestion = item.bundle?.enabled && !isBundleActive && item.quantity > 0;
-
                 return (
                   <motion.div
                     key={item.id}
                     layout
-                    initial={{ opacity: 0, y: 10 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200"
+                    className="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-200/40 transition-all duration-300 group"
                   >
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="flex justify-between items-start mb-6">
                       <div className="flex-1 min-w-0 pr-4">
-                        <h4 className="font-bold text-slate-800 text-sm truncate">{item.name}</h4>
-                        <p className="text-lg font-black text-indigo-600 mt-0.5">{formatCurrency(itemTotal)}</p>
+                        <h4 className="font-black text-slate-900 text-base tracking-tight truncate">{item.name}</h4>
+                        <p className="text-xs text-slate-600 font-bold uppercase tracking-widest mt-1">{formatCurrency(item.basePrice)}</p>
                       </div>
-                      <div className="flex items-center gap-3 bg-slate-50 rounded-2xl p-1 border border-slate-100">
+                      <button
+                        onClick={() => updateQuantity(item.id, -item.quantity)}
+                        className="w-10 h-10 flex items-center justify-center text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-100">
                         <button
                           onClick={() => updateQuantity(item.id, -1)}
-                          className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-sm text-slate-600 transition-all"
+                          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-purple-600 transition-all"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
-                        <span className="text-sm font-black w-5 text-center text-slate-900">{item.quantity}</span>
+                        <span className="text-sm font-black w-8 text-center text-slate-900">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.id, 1)}
-                          className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-sm text-slate-600 transition-all"
+                          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-400 hover:text-purple-600 transition-all"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
-                    </div>
-
-                    {isBundleActive && (
-                      <div className="flex items-center gap-1.5 text-[10px] text-emerald-600 font-extrabold uppercase tracking-wider mb-3 bg-emerald-50 w-fit px-2 py-0.5 rounded-md">
-                        <Tag className="w-3 h-3" />
-                        Bundle Applied
+                      <div className="text-right">
+                        <span className="text-xl font-black text-slate-900 tracking-tight">{formatCurrency(itemTotal)}</span>
                       </div>
-                    )}
-
-                    {showSuggestion && nextBundleQty === 1 && (
-                      <div className="flex items-center gap-1.5 text-[10px] text-indigo-600 font-extrabold uppercase tracking-wider mb-3 bg-indigo-50 w-fit px-2 py-0.5 rounded-md">
-                        <AlertCircle className="w-3 h-3" />
-                        +1 for Bundle Price
-                      </div>
-                    )}
-
-                    <div className="relative">
-                      <FileText className="absolute left-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
-                      <input
-                        type="text"
-                        placeholder="Add special instructions..."
-                        value={item.note || ''}
-                        onChange={(e) => updateItemNote(item.id, e.target.value)}
-                        className="w-full text-xs bg-transparent border-none focus:ring-0 pl-5 py-1 text-slate-500 placeholder-slate-300 font-medium"
-                      />
                     </div>
                   </motion.div>
                 );
@@ -284,26 +279,18 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
           )}
         </div>
 
-        <div className="p-6 bg-white border-t border-slate-100 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
-          <div className="mb-6 space-y-3">
-            <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-              <FileText className="w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Order Note..."
-                value={globalNote}
-                onChange={(e) => setGlobalNote(e.target.value)}
-                className="flex-1 text-xs bg-transparent border-none outline-none text-slate-600 font-medium placeholder-slate-300 focus:ring-0"
-              />
-            </div>
-            <div className="flex justify-between items-end pt-2">
-              <div>
-                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-1">Total Amount</p>
-                <span className="text-3xl font-black text-slate-900 tracking-tighter">{formatCurrency(cartTotal)}</span>
+        {/* Bottom Section: Sticky Payment Area */}
+        <div className="p-8 bg-white border-t border-slate-100 space-y-8">
+          {/* Total Card */}
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 p-8 rounded-[2.5rem] border border-purple-100/50 shadow-lg shadow-purple-100/20">
+            <div className="flex justify-between items-end">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em]">Total Pembayaran</p>
+                <h2 className="text-4xl font-black text-purple-900 tracking-tighter">{formatCurrency(cartTotal)}</h2>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-1">Items</p>
-                <span className="text-xl font-black text-slate-900">{cart.reduce((s, i) => s + i.quantity, 0)}</span>
+                <p className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em]">Items</p>
+                <p className="text-xl font-black text-purple-900">{cart.reduce((s, i) => s + i.quantity, 0)}</p>
               </div>
             </div>
           </div>
@@ -311,17 +298,19 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
           <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => setCart([])}
-              disabled={isConfirming || showSuccess}
-              className="px-4 py-4 text-slate-500 font-bold text-sm bg-slate-100 hover:bg-slate-200 rounded-2xl transition-all duration-200 disabled:opacity-50 uppercase tracking-widest"
+              disabled={isConfirming || showSuccess || cart.length === 0}
+              className="px-6 py-5 text-slate-600 font-black text-xs uppercase tracking-widest bg-slate-50 hover:bg-slate-100 rounded-2xl transition-all duration-300 disabled:opacity-50"
             >
-              Clear
+              CLEAR
             </button>
             <motion.button
               onClick={handleConfirmOrder}
               disabled={cart.length === 0 || isConfirming || showSuccess}
-              whileTap={{ scale: 0.95 }}
-              animate={showSuccess ? { backgroundColor: '#10b981' } : { backgroundColor: '#4f46e5' }}
-              className="px-4 py-4 text-white font-bold text-sm rounded-2xl transition-all duration-300 shadow-xl shadow-indigo-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden relative uppercase tracking-widest"
+              whileTap={{ scale: 0.98 }}
+              animate={showSuccess ? { backgroundColor: '#10b981' } : {}}
+              className={`px-6 py-5 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-500 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden ${
+                !showSuccess ? 'bg-gradient-to-r from-purple-600 to-indigo-600 shadow-xl shadow-purple-200 hover:shadow-purple-300 hover:-translate-y-0.5' : ''
+              }`}
             >
               <AnimatePresence mode="wait">
                 {showSuccess ? (
@@ -333,7 +322,7 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
                     className="flex items-center gap-2"
                   >
                     <CheckCircle className="w-5 h-5" />
-                    <span>Success</span>
+                    <span>SUCCESS</span>
                   </motion.div>
                 ) : isConfirming ? (
                   <motion.div
@@ -344,7 +333,7 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
                     className="flex items-center gap-2"
                   >
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Processing</span>
+                    <span>PROCESSING</span>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -355,10 +344,15 @@ export function CashierView({ menu, onCreateOrder }: CashierViewProps) {
                     className="flex items-center gap-2"
                   >
                     <CreditCard className="w-5 h-5" />
-                    <span>Confirm</span>
+                    <span>CONFIRM</span>
                   </motion.div>
                 )}
               </AnimatePresence>
+              
+              {/* Glow effect */}
+              {!showSuccess && !isConfirming && cart.length > 0 && (
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full animate-[shimmer_2s_infinite]" />
+              )}
             </motion.button>
           </div>
         </div>

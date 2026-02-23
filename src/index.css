@@ -8,6 +8,11 @@
   --radius-xl: 1rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
 }
 
 @layer utilities {
@@ -26,9 +31,35 @@ body {
 }
 
 .glass-panel {
-  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm;
+  @apply bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)];
+}
+
+.glass-card {
+  @apply bg-white/60 backdrop-blur-lg border border-white/40 shadow-xl;
+}
+
+.purple-glow {
+  box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+}
+
+.neon-green-glow {
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+}
+
+.purple-gradient {
+  @apply bg-gradient-to-br from-purple-600 to-indigo-600;
 }
 
 .card-shadow {
-  box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }

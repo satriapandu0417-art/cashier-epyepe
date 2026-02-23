@@ -182,71 +182,71 @@ export function OrderDetailPanel({ order, onClose }: OrderDetailPanelProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex justify-end bg-black/20 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-md"
         onClick={onClose}
       >
         <motion.div
           initial={{ x: '100%' }}
           animate={{ x: 0 }}
           exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="w-full max-w-5xl bg-white h-full shadow-2xl flex flex-col relative"
+          transition={{ type: 'spring', damping: 30, stiffness: 200 }}
+          className="w-full max-w-4xl glass-panel h-full shadow-2xl flex flex-col relative border-l border-white/40"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="p-8 border-b border-slate-100 bg-white">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">Order #{order.id.slice(0, 8)}</h2>
-                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border-2 flex items-center gap-2 ${
-                    order.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                    order.status === 'Preparing' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
-                    order.status === 'Picked Up' ? 'bg-sky-50 text-sky-600 border-sky-100' :
-                    order.status === 'Cancelled' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                    'bg-slate-50 text-slate-500 border-slate-100'
+          <div className="p-6 border-b border-white/40 bg-white/20">
+            <div className="flex justify-between items-center">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-black text-slate-900 tracking-tight">Order #{order.id.slice(0, 8)}</h2>
+                  <div className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-widest border ${
+                    order.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                    order.status === 'Preparing' ? 'bg-purple-500/10 text-purple-600 border-purple-500/20 purple-glow' :
+                    order.status === 'Picked Up' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' :
+                    order.status === 'Cancelled' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' :
+                    'bg-white/40 text-slate-600 border-white/60'
                   }`}>
-                    {isPickedUp && <Lock className="w-3.5 h-3.5" />}
                     {order.status}
-                  </span>
+                  </div>
                 </div>
-                <p className="text-sm text-slate-400 font-extrabold uppercase tracking-widest">{order.customerName}</p>
+                
+                <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-slate-600">
+                  <span className="text-slate-900 font-black">{order.customerName}</span>
+                  <span className="w-1 h-1 rounded-full bg-slate-300" />
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-purple-600" />
+                    {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                  <span className="w-1 h-1 rounded-full bg-slate-300" />
+                  <button
+                    onClick={handleTogglePayment}
+                    className={`flex items-center gap-2 px-3 py-1 rounded-lg border transition-all duration-300 ${
+                      order.paymentStatus === 'Paid'
+                        ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 neon-green-glow'
+                        : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                    }`}
+                  >
+                    <div className={`w-1.5 h-1.5 rounded-full ${order.paymentStatus === 'Paid' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                    {order.paymentStatus}
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
+
+              <div className="flex items-center gap-2">
                 {!isEditing && !isEditBlocked && order.status !== 'Cancelled' && (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="w-10 h-10 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all duration-300"
+                    className="w-10 h-10 flex items-center justify-center bg-white/60 text-purple-600 rounded-xl hover:bg-purple-600 hover:text-white transition-all duration-300 border border-white/60 shadow-sm"
                     title="Edit Order"
                   >
-                    <Edit className="w-5 h-5" />
+                    <Edit className="w-4 h-4" />
                   </button>
                 )}
                 <button 
                   onClick={onClose}
-                  className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+                  className="w-10 h-10 flex items-center justify-center text-slate-600 hover:text-slate-800 bg-white/60 rounded-xl transition-all border border-white/60 shadow-sm"
                 >
                   <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6 text-sm">
-              <div className="flex items-center gap-3 text-slate-400 font-bold uppercase tracking-widest text-xs">
-                <Clock className="w-4 h-4 text-slate-300" />
-                <span>{new Date(order.createdAt).toLocaleTimeString()}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleTogglePayment}
-                  className={`flex items-center gap-3 px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200 hover:scale-105 active:scale-95 border-2 ${
-                    order.paymentStatus === 'Paid'
-                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
-                      : 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100'
-                  }`}
-                >
-                  <div className={`w-2.5 h-2.5 rounded-full ${order.paymentStatus === 'Paid' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                  <span>{order.paymentStatus}</span>
                 </button>
               </div>
             </div>
@@ -254,33 +254,33 @@ export function OrderDetailPanel({ order, onClose }: OrderDetailPanelProps) {
 
           <div className="flex-1 flex overflow-hidden">
             {/* Left Column: Summary & Status */}
-            <div className="w-96 border-r border-slate-100 bg-[#F8F9FA] overflow-y-auto">
-              <div className="p-8 space-y-10">
+            <div className="w-80 border-r border-white/40 bg-white/10 overflow-y-auto">
+              <div className="p-10 space-y-12">
                 {/* Progress Section */}
-                <div className="space-y-5">
+                <div className="space-y-6">
                   <div className="flex justify-between items-end">
-                    <div className="flex items-center gap-3 text-indigo-600">
+                    <div className="flex items-center gap-3 text-purple-600">
                       <ChefHat className="w-6 h-6" />
-                      <h3 className="text-xs font-black uppercase tracking-widest">Kitchen Status</h3>
+                      <h3 className="text-[10px] font-black uppercase tracking-widest">Kitchen Status</h3>
                     </div>
                     <span className="text-sm font-black text-slate-900">{Math.round(progress)}%</span>
                   </div>
-                  <div className="h-3 bg-slate-200 rounded-full overflow-hidden shadow-inner">
+                  <div className="h-3 bg-white/40 rounded-full overflow-hidden shadow-inner border border-white/60">
                     <motion.div 
-                      className={`h-full rounded-full ${isAllPrepared ? 'bg-emerald-500' : 'bg-indigo-500'}`}
+                      className={`h-full rounded-full ${isAllPrepared ? 'bg-emerald-500 neon-green-glow' : 'purple-gradient purple-glow'}`}
                       initial={{ width: 0 }}
                       animate={{ width: `${progress}%` }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
                     />
                   </div>
                 </div>
 
                 {/* Totals Section */}
-                <div className="space-y-6 pt-8 border-t border-slate-100">
-                  <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Order Summary</h3>
-                  <div className="space-y-4">
+                <div className="space-y-8 pt-10 border-t border-white/40">
+                  <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Order Summary</h3>
+                  <div className="space-y-5">
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Subtotal</span>
+                      <span className="text-slate-600 font-black uppercase tracking-widest text-[10px]">Subtotal</span>
                       <span className="text-slate-900 font-black tracking-tight">{formatCurrency(isEditing ? editedSubtotal : originalTotal)}</span>
                     </div>
                     
@@ -294,39 +294,20 @@ export function OrderDetailPanel({ order, onClose }: OrderDetailPanelProps) {
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center pt-5 border-t border-slate-200">
+                    <div className="flex justify-between items-center pt-6 border-t border-white/60">
                       <span className="text-slate-900 font-black uppercase tracking-widest text-xs">Total</span>
-                      <span className="text-3xl font-black text-indigo-600 tracking-tighter">{formatCurrency(isEditing ? editedTotal : order.total)}</span>
+                      <span className="text-4xl font-black text-purple-600 tracking-tighter purple-glow">{formatCurrency(isEditing ? editedTotal : order.total)}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Note (View Mode) */}
                 {!isEditing && order.note && (
-                  <div className="space-y-3 pt-8 border-t border-slate-100">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Order Note</h3>
-                    <div className="flex items-start gap-3 text-xs text-indigo-700 bg-indigo-50/50 p-4 rounded-[1.5rem] border border-indigo-100/50">
+                  <div className="space-y-4 pt-10 border-t border-white/40">
+                    <h3 className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Order Note</h3>
+                    <div className="flex items-start gap-3 text-xs text-purple-700 bg-purple-500/10 p-5 rounded-[2rem] border border-purple-500/20">
                       <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                      <p className="leading-relaxed font-bold">{order.note}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Edit History */}
-                {!isEditing && order.editHistory && order.editHistory.length > 0 && (
-                  <div className="pt-8 border-t border-slate-100">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Edit History</h3>
-                    <div className="space-y-4">
-                      {order.editHistory.map((log, idx) => (
-                        <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                              {new Date(log.timestamp).toLocaleString()}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-slate-600 leading-relaxed font-medium">{log.changes}</p>
-                        </div>
-                      ))}
+                      <p className="leading-relaxed font-black">{order.note}</p>
                     </div>
                   </div>
                 )}
@@ -334,14 +315,14 @@ export function OrderDetailPanel({ order, onClose }: OrderDetailPanelProps) {
             </div>
 
             {/* Right Column: Menu Checklist */}
-            <div className={`flex-1 overflow-y-auto p-8 space-y-6 relative ${!isEditing && (isPickedUp || order.status === 'Cancelled') ? 'opacity-75 pointer-events-none grayscale-[0.5]' : ''}`}>
+            <div className={`flex-1 overflow-y-auto p-10 space-y-8 relative ${!isEditing && (isPickedUp || order.status === 'Cancelled') ? 'opacity-75 pointer-events-none grayscale-[0.5]' : ''}`}>
               {isEditing ? (
                 <>
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Edit Items</h3>
+                  <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter">Edit Items</h3>
                     <button
                       onClick={() => setShowAddMenu(true)}
-                      className="flex items-center gap-3 text-xs font-black text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 hover:bg-indigo-100 transition-all uppercase tracking-widest"
+                      className="flex items-center gap-3 text-[10px] font-black text-purple-600 bg-white/60 px-6 py-3 rounded-2xl border border-white/60 hover:bg-purple-600 hover:text-white transition-all uppercase tracking-widest shadow-sm"
                     >
                       <Plus className="w-4 h-4" />
                       Add Item
@@ -356,228 +337,144 @@ export function OrderDetailPanel({ order, onClose }: OrderDetailPanelProps) {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="p-6 rounded-[2rem] border border-indigo-100 bg-indigo-50/20 mb-4"
+                        className="p-8 rounded-[3rem] border border-white/60 bg-white/40 mb-6 shadow-sm group"
                       >
-                        <div className="flex justify-between items-start mb-6">
+                        <div className="flex justify-between items-start mb-8">
                           <div>
-                            <h4 className="text-lg font-black text-slate-900 tracking-tight">{item.name}</h4>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{formatCurrency(item.basePrice)} / unit</p>
+                            <h4 className="text-xl font-black text-slate-900 tracking-tight group-hover:text-purple-600 transition-colors">{item.name}</h4>
+                            <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1.5">{formatCurrency(item.basePrice)} / unit</p>
                           </div>
                           <button
                             onClick={() => handleRemoveItem(item.id)}
-                            className="w-10 h-10 flex items-center justify-center text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+                            className="w-12 h-12 flex items-center justify-center text-rose-500 hover:bg-rose-500 hover:text-white rounded-2xl transition-all border border-rose-100"
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center bg-white border border-indigo-100 rounded-xl p-1 shadow-sm">
+                          <div className="flex items-center bg-white/60 backdrop-blur-md border border-white/60 rounded-2xl p-1.5 shadow-inner">
                             <button
                               onClick={() => handleUpdateQuantity(item.id, -1)}
-                              className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
+                              className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-purple-600 hover:bg-white rounded-xl transition-all"
                             >
                               <Minus className="w-4 h-4" />
                             </button>
-                            <span className="w-12 text-center text-lg font-black text-slate-900">{item.quantity}</span>
+                            <span className="w-14 text-center text-xl font-black text-slate-900">{item.quantity}</span>
                             <button
                               onClick={() => handleUpdateQuantity(item.id, 1)}
-                              className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-all"
+                              className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-purple-600 hover:bg-white rounded-xl transition-all"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
                           </div>
-                          <span className="text-xl font-black text-slate-900 tracking-tight">
+                          <span className="text-2xl font-black text-slate-900 tracking-tighter">
                             {formatCurrency(calculateItemTotal(item, item.quantity))}
                           </span>
                         </div>
                       </motion.div>
                     ))}
                   </AnimatePresence>
-
-                  <div className="pt-6">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Order Note</label>
-                    <textarea
-                      value={editedNote}
-                      onChange={(e) => setEditedNote(e.target.value)}
-                      className="w-full p-5 text-sm font-bold bg-slate-50 border-none rounded-[1.5rem] focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all min-h-[100px] text-slate-700"
-                      placeholder="Add special instructions..."
-                    />
-                  </div>
                 </>
               ) : (
-                order.items.map((item) => (
-                  <motion.div
-                    key={item.id}
-                    layout
-                    className={`group relative p-6 rounded-[2rem] border transition-all duration-300 mb-4 ${
-                      item.isPrepared 
-                        ? 'bg-emerald-50/50 border-emerald-100' 
-                        : 'bg-white border-slate-100 hover:border-indigo-200 hover:shadow-xl hover:shadow-slate-200/40'
-                    }`}
-                  >
-                    <label className="flex items-start gap-6 cursor-pointer">
-                      <div className="relative flex items-center justify-center mt-1">
-                        <input
-                          type="checkbox"
-                          checked={!!item.isPrepared}
-                          onChange={() => !isPickedUp && order.status !== 'Cancelled' && toggleOrderItemPrepared(order.id, item.id)}
-                          disabled={isPickedUp || order.status === 'Cancelled'}
-                          className="peer appearance-none w-8 h-8 border-2 border-slate-200 rounded-xl checked:bg-emerald-500 checked:border-emerald-500 transition-all cursor-pointer disabled:cursor-not-allowed"
-                        />
-                        <CheckCircle2 className="w-5 h-5 text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
-                      </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className={`text-lg font-black tracking-tight transition-all ${
-                              item.isPrepared ? 'text-slate-300 line-through' : 'text-slate-900'
-                            }`}>
-                              {item.name}
-                            </h4>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">
-                              {formatCurrency(item.basePrice)} × {item.quantity}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <span className={`text-xl font-black tracking-tight transition-all ${
-                              item.isPrepared ? 'text-slate-300' : 'text-slate-900'
-                            }`}>
-                              {formatCurrency(calculateItemTotal(item, item.quantity))}
-                            </span>
-                          </div>
+                <div className="grid grid-cols-1 gap-6">
+                  {order.items.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      className={`group relative p-8 rounded-[3rem] border transition-all duration-500 ${
+                        item.isPrepared 
+                          ? 'bg-emerald-500/5 border-emerald-500/20' 
+                          : 'bg-white/40 border-white/60 hover:border-purple-500/30 hover:shadow-2xl hover:shadow-purple-200/20'
+                      }`}
+                    >
+                      <label className="flex items-start gap-8 cursor-pointer">
+                        <div className="relative flex items-center justify-center mt-1">
+                          <input
+                            type="checkbox"
+                            checked={!!item.isPrepared}
+                            onChange={() => !isPickedUp && order.status !== 'Cancelled' && toggleOrderItemPrepared(order.id, item.id)}
+                            disabled={isPickedUp || order.status === 'Cancelled'}
+                            className="peer appearance-none w-10 h-10 border-2 border-white/80 bg-white/40 rounded-2xl checked:bg-emerald-500 checked:border-emerald-500 transition-all cursor-pointer disabled:cursor-not-allowed shadow-sm"
+                          />
+                          <CheckCircle2 className="w-6 h-6 text-white absolute opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity" />
                         </div>
                         
-                        {item.bundle?.enabled && item.quantity >= item.bundle.buyQuantity && (
-                          <div className="mt-2 flex items-center gap-2 text-[10px] text-emerald-600 font-black uppercase tracking-widest bg-emerald-50 w-fit px-3 py-1 rounded-lg">
-                            <Tag className="w-3.5 h-3.5" />
-                            Bundle Applied
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className={`text-xl font-black tracking-tight transition-all duration-500 ${
+                                item.isPrepared ? 'text-slate-300 line-through' : 'text-slate-900'
+                              }`}>
+                                {item.name}
+                              </h4>
+                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1.5">
+                                {formatCurrency(item.basePrice)} × {item.quantity}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <span className={`text-2xl font-black tracking-tighter transition-all duration-500 ${
+                                item.isPrepared ? 'text-slate-300' : 'text-slate-900'
+                              }`}>
+                                {formatCurrency(calculateItemTotal(item, item.quantity))}
+                              </span>
+                            </div>
                           </div>
-                        )}
-                        
-                        {item.note && (
-                          <div className="mt-3 flex items-start gap-2 text-xs text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl inline-block font-bold">
-                            <AlertCircle className="w-3.5 h-3.5 mt-0.5" />
-                            {item.note}
-                          </div>
-                        )}
-                      </div>
-                    </label>
-                  </motion.div>
-                ))
+                          
+                          {item.bundle?.enabled && item.quantity >= item.bundle.buyQuantity && (
+                            <div className="mt-4 flex items-center gap-2 text-[10px] text-emerald-600 font-black uppercase tracking-widest bg-emerald-500/10 w-fit px-4 py-1.5 rounded-xl border border-emerald-500/20">
+                              <Tag className="w-3.5 h-3.5" />
+                              Bundle Applied
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                    </motion.div>
+                  ))}
+                </div>
               )}
-
-              {/* Add Item Menu Overlay */}
-              <AnimatePresence>
-                {showAddMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 20 }}
-                    className="absolute inset-0 z-30 bg-white flex flex-col"
-                  >
-                    <div className="p-8 border-b border-slate-100 flex items-center gap-6 bg-[#F8F9FA]">
-                      <button 
-                        onClick={() => setShowAddMenu(false)} 
-                        className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-xl transition-all"
-                      >
-                        <Undo className="w-5 h-5" />
-                      </button>
-                      <div className="flex-1 relative">
-                        <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" />
-                        <input
-                          autoFocus
-                          type="text"
-                          placeholder="Search menu items..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-12 pr-4 py-3.5 bg-white border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none shadow-sm"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-8 space-y-4 scrollbar-hide">
-                      <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Select Item to Add</h3>
-                      {filteredMenu.map(item => (
-                        <button
-                          key={item.id}
-                          onClick={() => handleAddItem(item)}
-                          className="w-full flex items-center justify-between p-6 rounded-[2rem] border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/20 transition-all text-left group"
-                        >
-                          <div>
-                            <p className="font-black text-slate-900 text-lg tracking-tight">{item.name}</p>
-                            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">{item.category} • {formatCurrency(item.basePrice)}</p>
-                          </div>
-                          <div className="w-10 h-10 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl opacity-0 group-hover:opacity-100 transition-all">
-                            <Plus className="w-5 h-5" />
-                          </div>
-                        </button>
-                      ))}
-                      {filteredMenu.length === 0 && (
-                        <div className="text-center py-20 text-slate-300">
-                          <Search className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                          <p className="text-sm font-black uppercase tracking-widest opacity-40">No items match your search</p>
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="p-8 border-t border-slate-100 bg-white">
+          <div className="p-10 border-t border-white/40 bg-white/20">
             <AnimatePresence mode="wait">
-              {saveStatus === 'error' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3"
-                >
-                  <AlertCircle className="w-5 h-5" />
-                  Failed to save changes. Please try again.
-                </motion.div>
-              )}
               {isEditing ? (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
-                  className="grid grid-cols-2 gap-4"
+                  className="grid grid-cols-2 gap-6"
                 >
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="flex items-center justify-center gap-3 p-4 rounded-2xl font-black text-slate-500 bg-slate-100 hover:bg-slate-200 transition-all uppercase tracking-widest text-sm"
+                    className="flex items-center justify-center gap-3 p-5 rounded-2xl font-black text-slate-500 bg-white/60 hover:bg-white transition-all uppercase tracking-widest text-xs border border-white/60"
                   >
                     <Undo className="w-5 h-5" />
-                    Cancel
+                    Discard
                   </button>
                   <button
                     onClick={handleSave}
                     disabled={editedItems.length === 0 || isSaving}
-                    className="flex items-center justify-center gap-3 p-4 rounded-2xl font-black text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl shadow-indigo-200 uppercase tracking-widest text-sm"
+                    className="flex items-center justify-center gap-3 p-5 rounded-2xl font-black text-white purple-gradient hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl shadow-purple-200 uppercase tracking-widest text-xs purple-glow"
                   >
                     {isSaving ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : saveStatus === 'success' ? (
-                      <CheckCircle2 className="w-5 h-5" />
                     ) : (
                       <Save className="w-5 h-5" />
                     )}
-                    {isSaving ? 'Saving...' : saveStatus === 'success' ? 'Saved!' : 'Save Changes'}
+                    {isSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 </motion.div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {order.status === 'Completed' && (
                     <motion.button
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
                       onClick={() => updateOrderStatus(order.id, 'Picked Up')}
-                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-2xl flex items-center justify-center gap-3 font-black uppercase tracking-widest shadow-xl shadow-indigo-200 transition-all text-sm"
+                      className="w-full purple-gradient text-white p-6 rounded-[2rem] flex items-center justify-center gap-4 font-black uppercase tracking-widest shadow-2xl shadow-purple-200 transition-all text-sm purple-glow hover:-translate-y-1"
                     >
                       <ShoppingBag className="w-6 h-6" />
                       Mark as Picked Up
@@ -588,36 +485,19 @@ export function OrderDetailPanel({ order, onClose }: OrderDetailPanelProps) {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-emerald-50 text-emerald-700 border border-emerald-100 p-4 rounded-2xl flex items-center justify-center gap-3 font-black uppercase tracking-widest text-sm"
+                      className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 p-6 rounded-[2rem] flex items-center justify-center gap-4 font-black uppercase tracking-widest text-sm neon-green-glow"
                     >
-                      <CheckCircle2 className="w-6 h-6" />
+                      <CheckCircle2 className="w-7 h-7" />
                       Order Collected
                     </motion.div>
                   )}
 
-                  {order.status === 'Cancelled' && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-rose-50 text-rose-700 border border-rose-100 p-4 rounded-2xl flex items-center justify-center gap-3 font-black uppercase tracking-widest text-sm"
-                    >
-                      <XCircle className="w-6 h-6" />
-                      Order Cancelled
-                    </motion.div>
-                  )}
-
-                  {order.status === 'Preparing' && (
-                    <div className="text-center text-xs text-slate-400 font-extrabold uppercase tracking-[0.2em] py-2">
-                      Finish preparing all items to complete order
-                    </div>
-                  )}
-
                   {/* Admin Actions */}
-                  <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="grid grid-cols-2 gap-6">
                     {order.status !== 'Cancelled' && order.status !== 'Picked Up' && (
                       <button
                         onClick={() => setIsConfirmCancelOpen(true)}
-                        className="flex items-center justify-center gap-3 px-6 py-3.5 text-xs font-black text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-2xl border border-rose-100 transition-all uppercase tracking-widest"
+                        className="flex items-center justify-center gap-3 px-8 py-4 text-[10px] font-black text-rose-600 bg-rose-500/10 hover:bg-rose-500/20 rounded-2xl border border-rose-500/20 transition-all uppercase tracking-widest"
                       >
                         <XCircle className="w-4 h-4" />
                         Cancel Order
@@ -625,10 +505,10 @@ export function OrderDetailPanel({ order, onClose }: OrderDetailPanelProps) {
                     )}
                     <button
                       onClick={() => setIsConfirmDeleteOpen(true)}
-                      className={`flex items-center justify-center gap-3 px-6 py-3.5 text-xs font-black rounded-2xl transition-all uppercase tracking-widest ${
+                      className={`flex items-center justify-center gap-3 px-8 py-4 text-[10px] font-black rounded-2xl transition-all uppercase tracking-widest ${
                         order.status === 'Cancelled' || order.status === 'Picked Up'
-                          ? 'col-span-2 bg-slate-100 text-slate-500 hover:bg-slate-200'
-                          : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
+                          ? 'col-span-2 bg-slate-900 text-white hover:bg-slate-800'
+                          : 'bg-white/60 text-slate-400 hover:text-slate-600 border border-white/60'
                       }`}
                     >
                       <Trash2 className="w-4 h-4" />

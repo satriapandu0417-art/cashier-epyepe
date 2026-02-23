@@ -28,7 +28,8 @@ import {
   Wifi,
   WifiOff,
   Tag,
-  AlertCircle
+  AlertCircle,
+  Store
 } from 'lucide-react';
 
 export function AdminDashboard() {
@@ -216,436 +217,404 @@ export function AdminDashboard() {
 
   const filterTabs: (OrderStatus | 'All')[] = ['All', 'Pending', 'Preparing', 'Completed', 'Picked Up', 'Cancelled'];
 
+  const filteredOrders = useMemo(() => {
+    return orders.filter(o => {
+      if (orderFilter !== 'All' && o.status !== orderFilter) return false;
+      return true;
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [orders, orderFilter]);
+
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-10">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-6 group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
-          <div className="p-4 bg-emerald-50 rounded-2xl text-emerald-600 group-hover:scale-110 transition-transform duration-300">
-            <DollarSign className="w-8 h-8" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 font-extrabold uppercase tracking-widest mb-1">Today's Revenue</p>
-            <h3 className="text-3xl font-black text-slate-900 tracking-tight">{formatCurrency(todayStats.revenue)}</h3>
-          </div>
-        </div>
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-6 group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
-          <div className="p-4 bg-indigo-50 rounded-2xl text-indigo-600 group-hover:scale-110 transition-transform duration-300">
-            <ShoppingBag className="w-8 h-8" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 font-extrabold uppercase tracking-widest mb-1">Today's Orders</p>
-            <h3 className="text-3xl font-black text-slate-900 tracking-tight">{todayStats.ordersCount}</h3>
-          </div>
-        </div>
-        <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-6 group hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
-          <div className="p-4 bg-amber-50 rounded-2xl text-amber-600 group-hover:scale-110 transition-transform duration-300">
-            <Package className="w-8 h-8" />
-          </div>
-          <div>
-            <p className="text-xs text-slate-400 font-extrabold uppercase tracking-widest mb-1">Items Sold</p>
-            <h3 className="text-3xl font-black text-slate-900 tracking-tight">{todayStats.itemsSold}</h3>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-8 border-b border-slate-100">
-        {(['overview', 'orders', 'menu', 'analytics'] as const).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-5 text-sm font-extrabold uppercase tracking-widest transition-all relative ${
-              activeTab === tab ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            {tab}
-            {activeTab === tab && (
-              <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-t-full" />
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Content */}
-      <div className="min-h-[500px]">
-        {activeTab === 'overview' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Left Column: Low Stock & Top Selling */}
-            <div className="space-y-10">
-              {/* Low Stock Alerts */}
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-black text-slate-900 flex items-center gap-3 uppercase tracking-tighter text-xl">
-                    <AlertCircle className="w-6 h-6 text-rose-500" />
-                    Low Stock
-                  </h3>
-                  <span className="px-3 py-1 bg-rose-50 text-rose-600 text-[10px] font-black rounded-full uppercase tracking-widest">
-                    {lowStockItems.length} Alert
-                  </span>
+    <div className="p-10 max-w-[1600px] mx-auto space-y-12">
+      {/* Hero Summary Card */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 glass-panel p-12 rounded-[3.5rem] relative overflow-hidden group purple-glow">
+          {/* Decorative Glows */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 blur-[100px] rounded-full -mr-20 -mt-20 group-hover:bg-purple-500/20 transition-colors duration-700" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full -ml-20 -mb-20" />
+          
+          <div className="relative z-10 flex flex-col h-full justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 purple-gradient rounded-xl flex items-center justify-center text-white shadow-lg shadow-purple-200">
+                  <TrendingUp className="w-5 h-5" />
                 </div>
-                <div className="space-y-4">
-                  {lowStockItems.map(item => (
-                    <div key={item.id} className="flex items-center justify-between p-4 bg-rose-50/30 rounded-2xl border border-rose-100/50">
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">{item.name}</p>
-                        <p className="text-[10px] text-rose-500 font-extrabold uppercase tracking-wider">Min: {item.minStock}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-black text-rose-600">{item.stock}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Left</p>
-                      </div>
-                    </div>
-                  ))}
-                  {lowStockItems.length === 0 && (
-                    <div className="text-center py-10 text-slate-300">
-                      <CheckCircle2 className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                      <p className="text-sm font-bold uppercase tracking-widest opacity-40">Stock is healthy</p>
-                    </div>
-                  )}
-                </div>
+                <p className="text-[10px] font-black text-purple-600 uppercase tracking-[0.3em]">Today's Performance</p>
               </div>
-
-              {/* Top Selling Products */}
-              <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                <h3 className="font-black text-slate-900 mb-6 flex items-center gap-3 uppercase tracking-tighter text-xl">
-                  <TrendingUp className="w-6 h-6 text-indigo-500" />
-                  Top Selling
-                </h3>
-                <div className="space-y-6">
-                  {topSellingItems.map((item, index) => (
-                    <div key={item.name} className="flex items-center gap-5">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black ${
-                        index === 0 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' : 'bg-slate-50 text-slate-400'
-                      }`}>
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-slate-900">{item.name}</p>
-                        <div className="w-full h-2 bg-slate-50 rounded-full mt-2 overflow-hidden">
-                          <motion.div 
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(item.quantity / topSellingItems[0].quantity) * 100}%` }}
-                            transition={{ duration: 1, ease: "easeOut" }}
-                            className="h-full bg-indigo-500 rounded-full" 
-                          />
-                        </div>
-                      </div>
-                      <span className="text-sm font-black text-slate-900">{item.quantity}</span>
-                    </div>
-                  ))}
+              
+              <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-12">
+                <div>
+                  <h2 className="text-7xl font-black text-slate-900 tracking-tighter mb-2">
+                    {formatCurrency(todayStats.revenue)}
+                  </h2>
+                  <div className="flex items-center gap-2 text-emerald-500 font-black text-xs uppercase tracking-widest">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>+12.5% vs yesterday</span>
+                  </div>
+                </div>
+                
+                <div className="flex gap-10 pb-2">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Total Orders</p>
+                    <p className="text-3xl font-black text-slate-900">{todayStats.ordersCount}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Success Rate</p>
+                    <p className="text-3xl font-black text-slate-900">98.2%</p>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Right Column: Recent Activity */}
-            <div className="lg:col-span-2 bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="font-black text-slate-900 flex items-center gap-3 uppercase tracking-tighter text-xl">
-                  <Clock className="w-6 h-6 text-indigo-500" />
-                  Recent Activity
-                </h3>
-                <button 
-                  onClick={() => setActiveTab('orders')}
-                  className="text-xs font-black text-indigo-600 hover:text-indigo-700 transition-colors uppercase tracking-widest"
-                >
-                  View All
-                </button>
+            
+            <div className="mt-12">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Sales Trend (Last 7 Hours)</p>
+                <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest bg-purple-50 px-3 py-1 rounded-full">Live Update</span>
               </div>
-              <div className="space-y-5">
-                {recentOrders.map(order => (
-                  <div 
-                    key={order.id} 
-                    onClick={() => setSelectedOrderId(order.id)}
-                    className="flex items-center gap-5 p-5 rounded-3xl border border-slate-50 hover:border-indigo-100 hover:bg-indigo-50/20 transition-all duration-300 cursor-pointer group"
+              <div className="h-24 w-full flex items-end gap-3">
+                {[40, 70, 45, 90, 65, 80, 55].map((h, i) => (
+                  <motion.div 
+                    key={i}
+                    initial={{ height: 0 }}
+                    animate={{ height: `${h}%` }}
+                    transition={{ delay: i * 0.1, duration: 1 }}
+                    className="flex-1 purple-gradient rounded-t-xl opacity-20 hover:opacity-100 transition-all cursor-pointer relative group/bar"
                   >
-                    <div className={`p-4 rounded-2xl shrink-0 ${
-                      order.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
-                      order.status === 'Preparing' ? 'bg-indigo-50 text-indigo-600' :
-                      order.status === 'Cancelled' ? 'bg-rose-50 text-rose-600' :
-                      'bg-slate-50 text-slate-500'
-                    }`}>
-                      {order.status === 'Preparing' ? <ChefHat className="w-6 h-6" /> : 
-                       order.status === 'Completed' ? <CheckCircle2 className="w-6 h-6" /> :
-                       order.status === 'Cancelled' ? <XCircle className="w-6 h-6" /> :
-                       <Package className="w-6 h-6" />}
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-black px-2 py-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity">
+                      {h}k
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-1">
-                        <h4 className="font-bold text-slate-900 truncate text-base">{order.customerName}</h4>
-                        <span className="text-[10px] text-slate-300 font-mono font-bold">#{order.id.slice(0, 8)}</span>
-                      </div>
-                      <p className="text-xs text-slate-400 font-medium">
-                        {order.items.length} items • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-black text-slate-900 text-lg tracking-tight">{formatCurrency(order.total)}</p>
-                      <span className={`text-[10px] font-black uppercase tracking-[0.15em] ${
-                        order.status === 'Completed' ? 'text-emerald-500' :
-                        order.status === 'Preparing' ? 'text-indigo-500' :
-                        order.status === 'Cancelled' ? 'text-rose-500' :
-                        'text-slate-400'
-                      }`}>
-                        {order.status}
-                      </span>
-                    </div>
-                  </div>
+                  </motion.div>
                 ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-panel p-10 rounded-[3.5rem] flex flex-col justify-between relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-indigo-500/5 group-hover:from-purple-500/10 group-hover:to-indigo-500/10 transition-colors duration-500" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter">Inventory Health</h3>
+              <div className="p-3 bg-rose-500/10 text-rose-600 rounded-2xl">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              {lowStockItems.slice(0, 3).map(item => (
+                <div key={item.id} className="flex items-center justify-between p-4 bg-white/40 rounded-2xl border border-white/60 shadow-sm">
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-slate-900 truncate tracking-tight">{item.name}</p>
+                    <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mt-0.5">{item.stock} left</p>
+                  </div>
+                  <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-600 font-black text-xs">
+                    !
+                  </div>
+                </div>
+              ))}
+              {lowStockItems.length === 0 && (
+                <div className="text-center py-12">
+                  <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-4 opacity-20" />
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Inventory is healthy</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <button className="relative z-10 w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors mt-8">
+            Manage Inventory
+          </button>
+        </div>
+      </div>
+
+      {/* Filter Controls & View Toggle */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+        <div className="flex bg-white/40 backdrop-blur-md p-1.5 rounded-[2rem] border border-white/60 shadow-inner w-fit">
+          {(['overview', 'orders', 'menu', 'analytics'] as const).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-8 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                activeTab === tab
+                  ? 'bg-white text-purple-600 shadow-xl shadow-purple-100 ring-1 ring-white/50 purple-glow'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex bg-white/40 backdrop-blur-md p-1.5 rounded-[2rem] border border-white/60 shadow-inner w-fit">
+          {['Today', 'Yesterday', 'Custom'].map((f) => (
+            <button
+              key={f}
+              onClick={() => f === 'Today' ? setHistoryFilter('Today') : f === 'Yesterday' ? setHistoryFilter('Yesterday') : setHistoryFilter('Custom')}
+              className={`px-8 py-3 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                historyFilter === f
+                  ? 'bg-white text-purple-600 shadow-xl shadow-purple-100 ring-1 ring-white/50 purple-glow'
+                  : 'text-slate-400 hover:text-slate-600'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="min-h-[600px]">
+        {activeTab === 'overview' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            {/* Left Column: Order List */}
+            <div className="lg:col-span-2 space-y-8">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Live Orders</h3>
+                <div className="flex bg-white/40 backdrop-blur-md p-1 rounded-2xl border border-white/60 shadow-inner">
+                  {['All', 'Preparing', 'Completed'].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setOrderFilter(s as any)}
+                      className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 ${
+                        orderFilter === s
+                          ? 'bg-white text-purple-600 shadow-md ring-1 ring-white/50'
+                          : 'text-slate-600 hover:text-slate-800'
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <AnimatePresence mode="popLayout">
+                  {filteredOrders.slice(0, 6).map((order) => (
+                    <motion.div
+                      key={order.id}
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      onClick={() => setSelectedOrderId(order.id)}
+                      className="glass-card p-8 rounded-[3rem] hover:shadow-2xl hover:shadow-purple-200/30 transition-all duration-500 cursor-pointer group relative overflow-hidden border-white/60"
+                    >
+                      {/* Hover Glow */}
+                      <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500/5 blur-[50px] rounded-full -mr-16 -mt-16 group-hover:bg-purple-500/15 transition-colors duration-500" />
+                      
+                      <div className="relative z-10">
+                        <div className="flex justify-between items-start mb-8">
+                          <div className="min-w-0">
+                            <h4 className="font-black text-slate-900 text-xl tracking-tight truncate group-hover:text-purple-600 transition-colors">{order.customerName}</h4>
+                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1.5">Order ID: {order.id.slice(0, 8)}</p>
+                          </div>
+                          <div className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${
+                            order.paymentStatus === 'Paid' 
+                              ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 neon-green-glow' 
+                              : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                          }`}>
+                            {order.paymentStatus}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mb-8">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500">
+                              <Clock className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-black text-slate-900 tracking-tight">
+                                {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Time</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500">
+                              <Package className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-xs font-black text-slate-900 tracking-tight">{order.items.length} Items</span>
+                              <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Count</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-8 border-t border-white/40">
+                          <span className="text-3xl font-black text-slate-900 tracking-tighter">{formatCurrency(order.total)}</span>
+                          <div className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest border ${
+                            order.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                            order.status === 'Preparing' ? 'bg-purple-500/10 text-purple-600 border-purple-500/20 purple-glow' :
+                            order.status === 'Picked Up' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' :
+                            'bg-slate-100 text-slate-600 border-slate-200'
+                          }`}>
+                            {order.status}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Right Column: Top Sellers & Activity */}
+            <div className="space-y-12">
+              <div className="glass-panel p-10 rounded-[3.5rem]">
+                <h3 className="text-lg font-black text-slate-900 uppercase tracking-tighter mb-8">Top Selling</h3>
+                <div className="space-y-8">
+                  {topSellingItems.slice(0, 4).map((item, index) => (
+                    <div key={item.name} className="flex items-center gap-5 group">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black shrink-0 transition-transform group-hover:scale-110 ${
+                        index === 0 ? 'purple-gradient text-white shadow-lg shadow-purple-200' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black text-slate-900 truncate tracking-tight">{item.name}</p>
+                        <div className="flex items-center gap-3 mt-1.5">
+                          <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(item.quantity / topSellingItems[0].quantity) * 100}%` }}
+                              className="h-full purple-gradient rounded-full"
+                            />
+                          </div>
+                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{item.quantity}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="glass-panel p-10 rounded-[3.5rem] bg-slate-900 text-white relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/20 blur-[40px] rounded-full -mr-10 -mt-10" />
+                <h3 className="text-lg font-black uppercase tracking-tighter mb-4 relative z-10">System Status</h3>
+                <div className="space-y-4 relative z-10">
+                  <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-600">
+                    <span>Database</span>
+                    <span className="text-emerald-500">Online</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-600">
+                    <span>Realtime Sync</span>
+                    <span className="text-emerald-500">Active</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-slate-600">
+                    <span>Last Backup</span>
+                    <span>2m ago</span>
+                  </div>
+                </div>
+                <button className="w-full py-4 bg-white/10 hover:bg-white/20 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all mt-8">
+                  View System Logs
+                </button>
               </div>
             </div>
           </div>
         ) : activeTab === 'orders' ? (
-          <div className="space-y-8">
-            {/* Date Filters */}
-            <div className="flex flex-wrap items-center justify-between gap-6">
-              <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200/40">
-                {(['Today', 'Yesterday', 'Custom'] as const).map(f => (
-                  <button
-                    key={f}
-                    onClick={() => setHistoryFilter(f)}
-                    className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 ${
-                      historyFilter === f
-                        ? 'bg-white text-indigo-600 shadow-sm ring-1 ring-slate-200/50'
-                        : 'text-slate-400 hover:text-slate-600'
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
+          <div className="space-y-12">
+            {/* Grouped Orders List (Glass Style) */}
+            {groupedOrders.map(group => (
+              <div key={group.date} className="space-y-8">
+                <div className="flex items-center justify-between px-4">
+                  <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">{group.label}</h3>
+                  <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">{group.orders.length} Orders</span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {group.orders.map(order => (
+                    <motion.div
+                      key={order.id}
+                      layout
+                      onClick={() => setSelectedOrderId(order.id)}
+                      className="glass-card p-8 rounded-[3rem] hover:shadow-2xl hover:shadow-purple-200/20 transition-all duration-500 cursor-pointer group relative overflow-hidden border-white/60"
+                    >
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="min-w-0">
+                          <h4 className="font-black text-slate-900 text-lg tracking-tight truncate group-hover:text-purple-600 transition-colors">{order.customerName}</h4>
+                          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">Order #{order.id.slice(0, 8)}</p>
+                        </div>
+                        <div className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
+                          order.paymentStatus === 'Paid' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                        }`}>
+                          {order.paymentStatus}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-6 border-t border-white/40">
+                        <span className="text-2xl font-black text-slate-900 tracking-tighter">{formatCurrency(order.total)}</span>
+                        <span className={`text-[10px] font-black px-4 py-1.5 rounded-2xl uppercase tracking-widest border ${
+                          order.status === 'Completed' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                          order.status === 'Preparing' ? 'bg-purple-500/10 text-purple-600 border-purple-500/20' :
+                          'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-
-              {historyFilter === 'Custom' && (
-                <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">From</span>
-                    <input
-                      type="date"
-                      value={customHistoryStart}
-                      onChange={(e) => setCustomHistoryStart(e.target.value)}
-                      className="px-4 py-2 bg-slate-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-700"
-                    />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">To</span>
-                    <input
-                      type="date"
-                      value={customHistoryEnd}
-                      onChange={(e) => setCustomHistoryEnd(e.target.value)}
-                      className="px-4 py-2 bg-slate-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-700"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Order Status Filters */}
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              {filterTabs.map(status => (
-                <button
-                  key={status}
-                  onClick={() => setOrderFilter(status)}
-                  className={`px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap transition-all duration-200 ${
-                    orderFilter === status
-                      ? 'bg-slate-900 text-white shadow-xl shadow-slate-200'
-                      : 'bg-white text-slate-500 border border-slate-100 hover:bg-slate-50'
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
-
-            {/* Grouped Orders List */}
-            <div className="space-y-12">
-              {groupedOrders.map(group => (
-                <div key={group.date} className="space-y-6">
-                  {/* Date Header & Summary */}
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-4">
-                      <div className="p-4 bg-indigo-50 rounded-2xl shadow-inner">
-                        <Calendar className="w-6 h-6 text-indigo-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-black text-slate-900 text-lg tracking-tight">{group.label}</h3>
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{group.orders.length} Orders</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-10">
-                      <div className="text-right">
-                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Revenue</p>
-                        <p className="text-lg font-black text-slate-900 tracking-tight">{formatCurrency(group.stats.revenue)}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Items</p>
-                        <p className="text-lg font-black text-slate-900 tracking-tight">{group.stats.items}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] mb-1">Success</p>
-                        <p className="text-lg font-black text-emerald-600 tracking-tight">{group.stats.count}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Column Headers */}
-                  <div className="hidden lg:grid grid-cols-[1fr_120px_140px_160px_120px] gap-6 px-8 py-2 text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
-                    <div>Order / Customer</div>
-                    <div className="text-right">Total</div>
-                    <div className="text-center">Payment</div>
-                    <div className="text-center">Status</div>
-                    <div className="text-right">Actions</div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {group.orders.map(order => (
-                      <motion.div 
-                        key={order.id} 
-                        layoutId={`order-${order.id}`}
-                        onClick={() => setSelectedOrderId(order.id)}
-                        className={`bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col lg:grid lg:grid-cols-[1fr_120px_140px_160px_120px] lg:items-center gap-6 cursor-pointer hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 hover:border-indigo-100 ${
-                          order.status === 'Picked Up' ? 'opacity-75' : 
-                          order.status === 'Cancelled' ? 'opacity-60 grayscale bg-slate-50/50' : ''
-                        }`}
-                      >
-                        <div className="flex items-center gap-5">
-                          <div className={`p-4 rounded-2xl shrink-0 ${
-                            order.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' :
-                            order.status === 'Picked Up' ? 'bg-sky-50 text-sky-600' :
-                            order.status === 'Cancelled' ? 'bg-rose-50 text-rose-600' :
-                            order.status === 'Preparing' ? 'bg-indigo-50 text-indigo-600' :
-                            'bg-slate-50 text-slate-500'
-                          }`}>
-                            {order.status === 'Preparing' ? <ChefHat className="w-6 h-6" /> : 
-                             order.status === 'Picked Up' ? <ShoppingBag className="w-6 h-6" /> :
-                             order.status === 'Cancelled' ? <XCircle className="w-6 h-6" /> :
-                             order.status === 'Completed' ? <CheckCircle2 className="w-6 h-6" /> :
-                             <Package className="w-6 h-6" />}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-3 mb-1">
-                              <h4 className={`font-black text-slate-900 truncate text-lg tracking-tight ${order.status === 'Cancelled' ? 'line-through text-slate-400' : ''}`}>{order.customerName}</h4>
-                              <span className="text-[10px] text-slate-300 font-mono font-bold shrink-0">#{order.id.slice(0, 8)}</span>
-                              {order.status === 'Picked Up' && <Lock className="w-3.5 h-3.5 text-slate-300 shrink-0" />}
-                            </div>
-                            <p className="text-xs text-slate-400 font-extrabold uppercase tracking-widest">
-                              {order.items.length} items • {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="lg:text-right">
-                          <p className={`font-black text-slate-900 text-lg tracking-tight ${order.status === 'Cancelled' ? 'line-through text-slate-300' : ''}`}>
-                            {formatCurrency(order.total)}
-                          </p>
-                        </div>
-
-                        <div className="flex lg:justify-center">
-                          <button
-                            onClick={(e) => handleTogglePayment(e, order.id, order.paymentStatus)}
-                            className={`text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest transition-all duration-200 hover:scale-105 active:scale-95 border-2 ${
-                              order.paymentStatus === 'Paid' 
-                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100' 
-                                : 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100'
-                            }`}
-                          >
-                            {order.paymentStatus}
-                          </button>
-                        </div>
-
-                        <div className="flex lg:justify-center">
-                          <span className={`text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border-2 ${
-                            order.status === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
-                            order.status === 'Picked Up' ? 'bg-sky-50 text-sky-600 border-sky-100' :
-                            order.status === 'Preparing' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
-                            order.status === 'Cancelled' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                            'bg-slate-50 text-slate-500 border-slate-100'
-                          }`}>
-                            {order.status}
-                          </span>
-                        </div>
-
-                        <div className="flex justify-end gap-2">
-                          {order.status !== 'Cancelled' && order.status !== 'Picked Up' && (
-                            <button
-                              onClick={(e) => handleCancelOrder(e, order.id)}
-                              className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all duration-200"
-                              title="Cancel Order"
-                            >
-                              <XCircle className="w-5 h-5" />
-                            </button>
-                          )}
-                          <button
-                            onClick={(e) => handleDeleteOrder(e, order.id)}
-                            className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all duration-200"
-                            title="Delete Order"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              {groupedOrders.length === 0 && (
-                <div className="text-center py-32 text-slate-300">
-                  <div className="w-24 h-24 bg-slate-50 rounded-[3rem] flex items-center justify-center mx-auto mb-6">
-                    <Package className="w-12 h-12 opacity-20" />
-                  </div>
-                  <p className="font-black text-sm uppercase tracking-[0.2em] opacity-40">No orders found</p>
-                </div>
-              )}
-            </div>
+            ))}
           </div>
         ) : activeTab === 'menu' ? (
           <div className="space-y-10">
-            <div className="flex justify-end">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Menu Items</h3>
+                <p className="text-slate-600 text-[10px] font-black uppercase tracking-widest mt-1">Manage your products and inventory</p>
+              </div>
               <button
                 onClick={() => {
                   setEditingItem(undefined);
                   setIsModalOpen(true);
                 }}
-                className="flex items-center gap-3 px-6 py-3.5 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all duration-300 shadow-xl shadow-indigo-200 font-black text-sm uppercase tracking-widest"
+                className="flex items-center gap-3 px-8 py-4 purple-gradient text-white rounded-2xl shadow-xl shadow-purple-200 font-black text-[10px] uppercase tracking-widest hover:-translate-y-1 transition-all duration-300"
               >
-                <Plus className="w-5 h-5" />
-                Add Item
+                <Plus className="w-4 h-4" />
+                Add New Item
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {menu.map(item => (
-                <div key={item.id} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm group hover:shadow-2xl hover:shadow-slate-200/60 transition-all duration-500 overflow-hidden flex flex-col relative">
+                <motion.div 
+                  key={item.id} 
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="glass-panel rounded-[2.5rem] group hover:shadow-2xl hover:shadow-purple-200/20 transition-all duration-500 overflow-hidden flex flex-col relative"
+                >
                   <div className="p-8 flex flex-col flex-1">
-                    <div className="flex justify-between items-start mb-4">
-                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
+                    <div className="flex justify-between items-start mb-6">
+                      <span className="text-[9px] font-black text-purple-600 bg-purple-50 px-3 py-1 rounded-lg uppercase tracking-[0.2em] border border-purple-100">
                         {item.category}
                       </span>
                       <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
                         <button
                           onClick={() => handleEdit(item)}
-                          className="w-9 h-9 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all duration-200"
+                          className="w-9 h-9 flex items-center justify-center bg-white/60 text-purple-600 rounded-xl hover:bg-purple-600 hover:text-white transition-all duration-300 border border-white/60 shadow-sm"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteMenuItem(item.id, item.name)}
-                          className="w-9 h-9 flex items-center justify-center bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all duration-200"
+                          className="w-9 h-9 flex items-center justify-center bg-white/60 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all duration-300 border border-white/60 shadow-sm"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
                     
-                    <h4 className="font-black text-slate-900 mb-2 text-xl line-clamp-1 tracking-tight">{item.name}</h4>
-                    <p className="text-3xl font-black text-indigo-600 mb-6 tracking-tighter">{formatCurrency(item.basePrice)}</p>
+                    <h4 className="font-black text-slate-900 mb-2 text-xl line-clamp-1 tracking-tight group-hover:text-purple-600 transition-colors">{item.name}</h4>
+                    <p className="text-3xl font-black text-slate-900 mb-8 tracking-tighter">{formatCurrency(item.basePrice)}</p>
                     
                     <div className="space-y-4 mt-auto">
                       {item.stock !== undefined && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock Status</span>
+                        <div className="flex items-center justify-between p-4 bg-white/40 rounded-2xl border border-white/60">
+                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Stock Status</span>
                           <span className={`text-xs font-black px-3 py-1 rounded-lg ${
-                            item.stock <= (item.minStock || 0) ? 'bg-rose-50 text-rose-600' : 'bg-slate-50 text-slate-900'
+                            item.stock <= (item.minStock || 0) ? 'bg-rose-500/10 text-rose-600 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                           }`}>
                             {item.stock} Units
                           </span>
@@ -653,8 +622,8 @@ export function AdminDashboard() {
                       )}
 
                       {item.bundle?.enabled && (
-                        <div className="pt-4 border-t border-slate-50">
-                          <div className="flex items-center gap-2 text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-100 w-fit uppercase tracking-wider">
+                        <div className="pt-4 border-t border-white/40">
+                          <div className="flex items-center gap-2 text-[9px] font-black text-purple-600 bg-purple-500/10 px-3 py-2 rounded-xl border border-purple-500/20 w-fit uppercase tracking-wider purple-glow">
                             <Tag className="w-3.5 h-3.5" />
                             <span>{item.bundle.buyQuantity} for {formatCurrency(item.bundle.bundlePrice)}</span>
                           </div>
@@ -662,7 +631,7 @@ export function AdminDashboard() {
                       )}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
