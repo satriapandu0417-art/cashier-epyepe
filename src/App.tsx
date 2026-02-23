@@ -8,6 +8,7 @@ import { CashierView } from './components/CashierView';
 import { AdminDashboard } from './components/AdminDashboard';
 import { useStore } from './hooks/useStore';
 import { LayoutDashboard, Store, Wifi, WifiOff } from 'lucide-react';
+import { Toaster } from 'sonner';
 
 export default function App() {
   const [view, setView] = useState<'cashier' | 'admin'>('cashier');
@@ -68,6 +69,7 @@ export default function App() {
           <AdminDashboard />
         )}
       </main>
+      <Toaster position="top-right" richColors />
     </div>
   );
 }
