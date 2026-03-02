@@ -87,7 +87,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .channel('menu_changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, (payload) => {
           if (payload.eventType === 'INSERT') {
-            setMenu(prev => [...prev, mapDbMenuItem(payload.new)]);
+            setMenu(prev => {
+              if (prev.some(i => i.id === payload.new.id)) return prev;
+              return [...prev, mapDbMenuItem(payload.new)];
+            });
           } else if (payload.eventType === 'UPDATE') {
             setMenu(prev => prev.map(item => item.id === payload.new.id ? mapDbMenuItem(payload.new) : item));
           } else if (payload.eventType === 'DELETE') {
@@ -100,7 +103,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .channel('orders_changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
           if (payload.eventType === 'INSERT') {
-            setOrders(prev => [mapDbOrder(payload.new), ...prev]);
+            setOrders(prev => {
+              if (prev.some(o => o.id === payload.new.id)) return prev;
+              return [mapDbOrder(payload.new), ...prev];
+            });
           } else if (payload.eventType === 'UPDATE') {
             setOrders(prev => prev.map(order => order.id === payload.new.id ? mapDbOrder(payload.new) : order));
           }
@@ -113,10 +119,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       };
     } else {
       // Fallback to Local Storage
-      const savedMenu = localStorage.getItem('pos_menu');
-      const savedOrders = localStorage.getItem('pos_orders');
-      setMenu(savedMenu ? JSON.parse(savedMenu) : DEFAULT_MENU);
-      setOrders(savedOrders ? JSON.parse(savedOrders) : []);
+      const loadFromLocal = () => {
+        const savedMenu = localStorage.getItem('pos_menu');
+        const savedOrders = localStorage.getItem('pos_orders');
+        if (savedMenu) setMenu(JSON.parse(savedMenu));
+        else setMenu(DEFAULT_MENU);
+        if (savedOrders) setOrders(JSON.parse(savedOrders));
+      };
+
+      loadFromLocal();
+
+      // Sync across tabs
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === 'pos_menu' || e.key === 'pos_orders') {
+          loadFromLocal();
+        }
+      };
+      window.addEventListener('storage', handleStorageChange);
+      return () => window.removeEventListener('storage', handleStorageChange);
     }
   }, []);
 
